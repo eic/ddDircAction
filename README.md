@@ -41,13 +41,9 @@ In the first command just below, i am throwing 50 GeV/c mu+ at "bar 4" (eicdirc 
 
 Note the syntax of the --action.step part of the following command. This syntax is very fiddly! Right now, I only use the first argument (the filename base for the output root file), the other two parameters are placeholders for further development. You'll note that i set the string parameter to "sim_dirconly_5k_bar4polarscan.incidence" which has the same base as the main output root file, defined later in the same command: "sim_dirconly_5k_bar4polarscan.edm4hep.root".
 
-In this way (may be improved in the future) the command below will produce two files:
-```
-sim_dirconly_5k_bar4polarscan.edm4hep.root
-```
-```
+In this way (may be improved in the future) the command below will produce two files:\
+sim_dirconly_5k_bar4polarscan.edm4hep.root\
 sim_dirconly_5k_bar4polarscan.incidence.root
-```
 
 Run a simulation with one primary muon per event and call the dirc stepping action:
 ```
