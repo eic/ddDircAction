@@ -23,15 +23,17 @@ export LD_LIBRARY_PATH=/Users/sp/eic/ddDircAction/install/lib:${LD_LIBRARY_PATH}
 and you need to change the parts of this path that are in front of eic/ddDircAction/install/lib .
 
 Running the code will produce a root file containing the "incidence tree". This tree is completely flat, has 9 columns, and is filled once for each and every track in the event with parentID = 0 (this is presently how i am flagging "primary" generated tracks) that impinges on any DIRC bar.
+```
   event number (starting from zero), 
   G4 trackID number, 
   pdgCode, 
   3 position doubles (x y z), and
   3 momentum doubles (px py pz).
+```
   
-The position and momentum information is that at the G4 step where the (truth) G4Track with that event number, trackID, and pdg code enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree.
+The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree.
 
-If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 particles striking dirc bars are saved to the incidence tree.
+If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree.
 
 ## running the code
 
