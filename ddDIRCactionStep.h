@@ -23,8 +23,7 @@ namespace dd4hep {
     
 	protected:
 		DDG4_DEFINE_ACTION_CONSTRUCTORS(ddDIRCactionStep);
-		// Property: filename to output radiation map
-		std::string  mRadiationMapOutputString  { };
+		std::string  mOutputString  { };
 		int          mFileNumber { };
 		int          mNumEvents { };                   
 
@@ -37,7 +36,7 @@ namespace dd4hep {
 		// Standard constructor with initializing arguments
 		ddDIRCactionStep(Geant4Context* context, const std::string& name = "") : Geant4SteppingAction(context, name) {
 			//
-			declareProperty("radiationOutputString", mRadiationMapOutputString); //This is the basic string for radiation output
+			declareProperty("OutputBase", mOutputString); //This is the basic string for output root file
 			declareProperty("fileNumber", mFileNumber); //file number to append to radiation output string
 			declareProperty("numEvents", mNumEvents); 	//number of simulated events... needed for normalization
 			//		
@@ -52,7 +51,7 @@ namespace dd4hep {
 				++nFill;
 				mDircIncidence_evt	= nFill - 1;
 				DircIncidenceTree	->Fill();
-				std::cout << "Stepping radiation dose ---> nEvents seen = " << nFill << std::endl;
+				std::cout << "ddDIRCactionStep ---> nEvents seen = " << nFill << std::endl;
 				//
 				steppingOutput->cd();		// dirc incidence output file
 				DircIncidenceTree->Write();	// dirc incidence output ttree
@@ -65,7 +64,7 @@ namespace dd4hep {
 		//---------------------------------------------------------------------------------------------------- 
 		void initializeOutputFile(){			
 			//
-			TString tmp(mRadiationMapOutputString);
+			TString tmp(mOutputString);
 			TString inputFileString;
 			//
 			//change here to write output to correct directory for your own simulations 
