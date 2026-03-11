@@ -44,6 +44,8 @@ Note the syntax of the --action.step part of the following command. This syntax 
 In this way (may be improved in the future) the command below will produce two files:
 ``
 sim_dirconly_5k_bar4polarscan.edm4hep.root
+```
+```
 sim_dirconly_5k_bar4polarscan.incidence.root
 ``
 
