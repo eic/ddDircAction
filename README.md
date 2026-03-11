@@ -47,7 +47,7 @@ sim_dirconly_5k_bar4polarscan.incidence.root
 
 ```
 npsim --runType batch \
---action.step '{"name":"ddDIRCactionStep","parameter":{"radiationOutputString":"sim_dirconly_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
+--action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_dirconly_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
 --compactFile $DETECTOR_PATH/epic_dirc_only.xml -G -N 5000 --gun.particle "mu+" \
 --gun.momentumMin 50*GeV --gun.momentumMax 50*GeV --gun.phiMin 358.45*deg --gun.phiMax 358.45*deg \
 --gun.thetaMin 30*deg --gun.thetaMax 140*deg --gun.distribution uniform --gun.position 0*cm,0*cm,0*cm \
@@ -56,12 +56,12 @@ npsim --runType batch \
 
 The command above throws the 50 GeV/c muons at phi = 358.45 degrees. This puts those muons at eta = 0 into the very middle of the face of "bar4". That is, the y position in the epic global coordinate system of the point where the 50 GeV muons enter the dirc bar plane is very close to -1.7cm (half the width of a dirc bar).
 
-Note the due to non-solenoidal components of the field, the tracks are one quite centered on the bar as the |pseudorapidity| increases. The impact point moves a few mm away from the center of the bar at high-eta.
+Note the due to non-solenoidal components of the field, the tracks are not quite centered on the bar anymore as the pseudorapidity of the tracks move away from zero. The impact point moves a few mm away from the center of the bar at high-eta.
 
 And here's the command to throw the same 50 GeV/c muons at the same bar4, but now through the entire epic detector.
 ```
 npsim --runType batch \
---action.step '{"name":"ddDIRCactionStep","parameter":{"radiationOutputString":"sim_epic_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
+--action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_epic_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
 --compactFile $DETECTOR_PATH/epic.xml -G -N 5000 --gun.particle "mu+" \
 --gun.momentumMin 50*GeV --gun.momentumMax 50*GeV --gun.phiMin 358.45*deg --gun.phiMax 358.45*deg \
 --gun.thetaMin 30*deg --gun.thetaMax 140*deg --gun.distribution uniform --gun.position 0*cm,0*cm,0*cm \
