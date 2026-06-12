@@ -27,13 +27,14 @@ Running the code will produce a root file containing the "incidence tree". This 
   event number (starting from zero), 
   G4 trackID number, 
   pdgCode, 
-  3 position doubles (x y z), and
-  3 momentum doubles (px py pz).
+  3 position doubles (x y z, in mm),
+  3 momentum doubles (px py pz, in GeV), and
+  1 time double (t, in ns)
 ```
   
 The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree. 
 
-If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree.
+If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree. I have so far tested this only when throwing single tracks from the gun.
 
 ## running the code
 
@@ -41,14 +42,14 @@ In the first command just below, i am throwing 50 GeV/c mu+ at "bar 4" (eicdirc 
 
 Note the syntax of the --action.step part of the following command. This syntax is very fiddly! Right now, I only use the first argument (the filename base for the output root file), the other two parameters are placeholders for further development. You'll note that i set the string parameter to "sim_dirconly_5k_bar4polarscan.incidence" which has the same base as the main output root file, defined later in the same command: "sim_dirconly_5k_bar4polarscan.edm4hep.root".
 
-In this way (may be improved in the future) the command below will produce two files:\
+In this way, the command below will produce two files:\
 sim_dirconly_5k_bar4polarscan.edm4hep.root\
 sim_dirconly_5k_bar4polarscan.incidence.root
 
 Run a simulation with one primary muon per event and call the dirc stepping action:
 ```
 npsim --runType batch \
---action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_dirconly_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
+--action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_dirconly_5k_bar4polarscan.incidence", "fileNumber":1, "DetailLevel":1}}' \
 --compactFile $DETECTOR_PATH/epic_dirc_only.xml -G -N 5000 --gun.particle "mu+" \
 --gun.momentumMin 50*GeV --gun.momentumMax 50*GeV --gun.phiMin 358.45*deg --gun.phiMax 358.45*deg \
 --gun.thetaMin 30*deg --gun.thetaMax 140*deg --gun.distribution uniform --gun.position 0*cm,0*cm,0*cm \
@@ -62,7 +63,7 @@ Note the due to non-solenoidal components of the field, the tracks are not quite
 And here's the command to throw the same 50 GeV/c muons at the same bar4, but now through the entire epic detector.
 ```
 npsim --runType batch \
---action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_epic_5k_bar4polarscan.incidence", "fileNumber":1, "numEvents":1}}' \
+--action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_epic_5k_bar4polarscan.incidence", "fileNumber":1, "DetailLevel":1}}' \
 --compactFile $DETECTOR_PATH/epic.xml -G -N 5000 --gun.particle "mu+" \
 --gun.momentumMin 50*GeV --gun.momentumMax 50*GeV --gun.phiMin 358.45*deg --gun.phiMax 358.45*deg \
 --gun.thetaMin 30*deg --gun.thetaMax 140*deg --gun.distribution uniform --gun.position 0*cm,0*cm,0*cm \
