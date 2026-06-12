@@ -166,6 +166,7 @@ namespace dd4hep {
 			//
 			if (trackID==1 && stepNumber==1 ){	// this is the first step of new event!
 				++nSeen;
+				if (nSeen%100==0) std::cout<<"ddDIRCactionStep::operator processing "<<nSeen<<std::endl;
 				if (mDircIncidence_r>0.){		// fill (unless very first step of code run)
 					++nFill;
 					mDircIncidence_evt	= nSeen - 1;
