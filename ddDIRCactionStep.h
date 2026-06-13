@@ -148,6 +148,29 @@ namespace dd4hep {
 			initialized = true;
 		}
 
+		//
+		//	bars polar max approx	 22.65 deg
+		//	bars polar min approx	164.3  deg
+		//
+		//	y to inner face of bar:	757.25 * mm
+		//
+		//	shortbar length		1140.025   (includes one glue layer)
+		//	shortbar length/2	 570.0125  (includes one-half glue layer)
+		//
+		//  double barsZmin_expected   = -2729.075 * mm;
+		//  double barsZmax_expected   =  1831.025 * mm;
+		//
+		//	-2729.075 +   1140.025	= -1589.05		high-z end of bar3
+		//	-2729.075 + 2*1140.025	=  -449.025		high-z end of bar2
+		//	-2729.075 + 3*1140.025	=   691.0		high-z end of bar1
+		//	-2729.075 + 4*1140.025	=  1831.025		high-z end of bar0
+		//
+		//	shortbar center coords:
+		//		765.875 -17.575 -2,159.0625
+		//		765.875 -17.575 -1,019.0375
+		//		765.875 -17.575    120.9875
+		//		765.875 -17.575  1,261.0125
+		//
 		//---------------------------------------------------------------------------------------------------- 
 		// Pre-track action callback
 		virtual void operator()(const G4Step* step, G4SteppingManager* mgr) override {
@@ -181,6 +204,9 @@ namespace dd4hep {
 			const G4ThreeVector stepLocation     = 0.5*(preStepLocation + postStepLocation); //midpoint of step
 			int stepStatus = step->GetPreStepPoint()->GetStepStatus();
 			//
+			//G4TouchableHandle postTouchable = step->GetPostStepPoint()->GetTouchableHandle();
+			//G4ThreeVector postLocalPos = postTouchable->GetHistory()->GetTopTransform().TransformPoint(postPos);
+			//
 			prevname = postname = "";
 			if ( step->GetPreStepPoint()->GetPhysicalVolume() 
 			  && step->GetPostStepPoint()->GetPhysicalVolume() ) {
@@ -200,7 +226,23 @@ namespace dd4hep {
 			 &&  postname.Contains("bar_vol") 	// enters bar_vol...
 			 && !prevname.Contains("bar_vol") 	// ...from some other volume
 			 ){									//--> this track enters a DIRC bar in this step!!!
-				DircIncidence_pos		= postStepLocation;
+				//
+				//G4TouchableHandle touchable = step->GetPostStepPoint()->GetTouchableHandle();
+				//G4ThreeVector globalCenter = touchable->GetHistory()->GetTopTransform().Inverse().TransformPoint(G4ThreeVector());
+				//std::cout<<"bar volume center: "<<globalCenter.x()<<" "<<globalCenter.y()<<" "<<globalCenter.z()<<" "<<std::endl;
+				//double shortbar_Zmin	= globalCenter.z() - 1225./2.;
+				//double shortbar_Zmax	= globalCenter.z() + 1225./2.;
+				//
+				//DircIncidence_pos		= postStepLocation;
+				DircIncidence_pos		= track->GetPosition();
+				//
+				if (nSeen<20){
+					std::cout<<"incidence: "<<DircIncidence_pos.x()<<" "
+							 <<DircIncidence_pos.y()<<" "
+							 <<DircIncidence_pos.z()<<" "
+							 <<std::endl;
+				}
+				//
 				DircIncidence_mom		= track->GetMomentum();
 				DircIncidence_momdir	= track->GetMomentumDirection();
 				mDircIncidence_trackID	= trackID;
