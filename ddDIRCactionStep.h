@@ -253,10 +253,14 @@ namespace dd4hep {
 					if (VERBOSE){
 						std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" nFill="<<nFill<<" trkID="<<trackID
 									//<<" parentID="<<parentID
-									<<" step="<<stepNumber<<" pdg="<<pdgCode<<" mass="<<mass<<" beta= "<<beta<<" chg="<<charge
+									<<" step="<<stepNumber
+									<<" pdg="<<pdgCode
+									<<" mass="<<mass
+									<<" beta= "<<mDircIncidence_beta
+									<<" chg="<<charge
 									<<" posn: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
 									<<" mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
-									<<" t: "<<mDircIncidence_t<<" beta: "<<mDircIncidence_beta
+									<<" t: "<<mDircIncidence_t
 									<<std::endl;
 					}
 					//
