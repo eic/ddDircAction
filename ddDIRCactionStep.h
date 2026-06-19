@@ -229,32 +229,37 @@ namespace dd4hep {
 				double ptot		= track->GetMomentum().mag() / CLHEP::GeV;
 				double etot		= sqrt(ptot*ptot + mass*mass);
 				double beta		= ptot/etot;
-				DircIncidence_mom		= track->GetMomentum();
-				DircIncidence_momdir	= track->GetMomentumDirection();
-				mDircIncidence_trackID	= trackID;
-				mDircIncidence_pdgCode	= pdgCode;
-				mDircIncidence_x		= postStepLocation.x() / CLHEP::mm;			// mm
-				mDircIncidence_y		= postStepLocation.y() / CLHEP::mm;			// mm
-				mDircIncidence_z		= postStepLocation.z() / CLHEP::mm;			// mm
-				mDircIncidence_r		= std::sqrt(mDircIncidence_x*mDircIncidence_x+mDircIncidence_y*mDircIncidence_y);	// mm
-				mDircIncidence_px		= track->GetMomentum().x() / CLHEP::GeV;	// GeV
-				mDircIncidence_py		= track->GetMomentum().y() / CLHEP::GeV;	// GeV
-				mDircIncidence_pz		= track->GetMomentum().z() / CLHEP::GeV;	// GeV
-				mDircIncidence_t		= track->GetGlobalTime() / CLHEP::ns;		// ns
-				mDircIncidence_mass		= mass;										// GeV
-				mDircIncidence_beta		= beta;										// GeV
-				mDircIncidence_evt		= currentEventID;
-				DircIncidenceTree	->Fill();
-				++nFill;
 				//
-				if (VERBOSE){
-					std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" nFill="<<nFill<<" trkID="<<trackID
-								//<<" parentID="<<parentID
-								<<" step="<<stepNumber<<" pdg="<<pdgCode<<" mass="<<mass<<" beta= "<<beta<<" chg="<<charge
-								<<" posn: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
-								<<" mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
-								<<" t: "<<mDircIncidence_t<<" beta: "<<mDircIncidence_beta
-								<<std::endl;
+				if (fabs(charge)>0. && mass>0. && beta>1./1.5){
+					//
+					DircIncidence_mom		= track->GetMomentum();
+					DircIncidence_momdir	= track->GetMomentumDirection();
+					mDircIncidence_trackID	= trackID;
+					mDircIncidence_pdgCode	= pdgCode;
+					mDircIncidence_x		= postStepLocation.x() / CLHEP::mm;			// mm
+					mDircIncidence_y		= postStepLocation.y() / CLHEP::mm;			// mm
+					mDircIncidence_z		= postStepLocation.z() / CLHEP::mm;			// mm
+					mDircIncidence_r		= std::sqrt(mDircIncidence_x*mDircIncidence_x+mDircIncidence_y*mDircIncidence_y);	// mm
+					mDircIncidence_px		= track->GetMomentum().x() / CLHEP::GeV;	// GeV
+					mDircIncidence_py		= track->GetMomentum().y() / CLHEP::GeV;	// GeV
+					mDircIncidence_pz		= track->GetMomentum().z() / CLHEP::GeV;	// GeV
+					mDircIncidence_t		= track->GetGlobalTime() / CLHEP::ns;		// ns
+					mDircIncidence_mass		= mass;										// GeV
+					mDircIncidence_beta		= beta;										// GeV
+					mDircIncidence_evt		= currentEventID;
+					DircIncidenceTree	->Fill();
+					++nFill;
+					//
+					if (VERBOSE){
+						std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" nFill="<<nFill<<" trkID="<<trackID
+									//<<" parentID="<<parentID
+									<<" step="<<stepNumber<<" pdg="<<pdgCode<<" mass="<<mass<<" beta= "<<beta<<" chg="<<charge
+									<<" posn: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
+									<<" mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
+									<<" t: "<<mDircIncidence_t<<" beta: "<<mDircIncidence_beta
+									<<std::endl;
+					}
+					//
 				}
 				//
 			}	// end check: primary entering bar?
