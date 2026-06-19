@@ -1,9 +1,10 @@
 #ifndef DDDIRCACTIONSTEP_H
 #define DDDIRCACTIONSTEP_H
 
+#include "G4EventManager.hh"
+#include "G4SteppingManager.hh"
 #include "DDG4/Geant4SteppingAction.h"
 #include "DDG4/Geant4StepHandler.h"
-#include "G4SteppingManager.hh"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -52,42 +53,37 @@ namespace dd4hep {
 			declareProperty("fileNumber" , mFileNumber  );  // UNUSED (but keep for future)
 			declareProperty("DetailLevel", mDetailLevel );  // 
 			//
+			std::cout<<"ddDIRCactionStep -- mDetailLevel = "<<mDetailLevel<<std::endl;
+			//
 		} ;
 		//
 		//---------------------------------------------------------------------------------------------------- 
 		// Default destructor
 		virtual ~ddDIRCactionStep() {
 			//
-			std::cout<<"ddDIRCactionStep -- mDetailLevel = "<<mDetailLevel<<std::endl;
-			//
 			if (steppingOutput) {
-				//
-				//---- catch last event info!
-				++nFill;
-				mDircIncidence_evt	= nSeen - 1;
-				DircIncidenceTree	->Fill();
 				//
 				steppingOutput->cd();		//---- dirc incidence output file
 				//
 				DircIncidenceTree->Write();	// dirc incidence output ttree
-				if (DETAIL){
-					ht1->Write();
-					ht2->Write();
-					ht3->Write();
-					ht4->Write();
-					ht5->Write();
-					ht6->Write();
-					for (int iev=0;iev<MON_nev;iev++){
-						hMON_thetaC_truth[iev]	->Write();
-						//hMON_OPtheta[iev]		->Write();
-					}
-				}
+// 				if (DETAIL){
+// 					ht1->Write();
+// 					ht2->Write();
+// 					ht3->Write();
+// 					ht4->Write();
+// 					ht5->Write();
+// 					ht6->Write();
+// 					for (int iev=0;iev<MON_nev;iev++){
+// 						hMON_thetaC_truth[iev]	->Write();
+// 						//hMON_OPtheta[iev]		->Write();
+// 					}
+// 				}
 				//
  				steppingOutput->Close();
 				delete steppingOutput;
 				//
-				std::cout << "ddDIRCactionStep -- nEvents seen = " << nSeen << std::endl;
-				std::cout << "ddDIRCactionStep -- nEvents fill = " << nFill << std::endl;
+				std::cout << "ddDIRCactionStep -- nSeen = " << nSeen << std::endl;
+				std::cout << "ddDIRCactionStep -- nFill = " << nFill << std::endl;
 				//
 			}		
 		};
@@ -95,16 +91,18 @@ namespace dd4hep {
 		//---------------------------------------------------------------------------------------------------- 
 		void initializeOutputFile(){			
 			//
+			eventManager = G4EventManager::GetEventManager();
+			//
 			if (mDetailLevel==0){
-				VERBOSE	= false;	// STFU & GBTW
+				VERBOSE	= false;	// very quiet
 				DETAIL	= false;	// just fill the incidence tree and leave as quickly as possible
 				std::cout<<"ddDIRCactionStep -- Fast mode - fill incidence tree only."<<std::endl;
 			} else if (mDetailLevel==1){
-				VERBOSE	= false;	// shut it.
+				VERBOSE	= false;	// mostly quiet
 				DETAIL	= true;		// calculate additional things and save histograms besides the incidence tree
 				std::cout<<"ddDIRCactionStep -- Detailed Calculations Enabled!"<<std::endl;
 			} else {
-				VERBOSE	= true;		// yap about it
+				VERBOSE	= true;		// not quiet
 				DETAIL	= true;		// calculate additional things and save histograms besides the incidence tree
 				std::cout<<"ddDIRCactionStep -- Detailed Calculations & Verbosity Enabled!"<<std::endl;
 			}
@@ -126,7 +124,9 @@ namespace dd4hep {
 				DircIncidenceTree->Branch("px"     , &mDircIncidence_px     ,     "px/D");
 				DircIncidenceTree->Branch("py"     , &mDircIncidence_py     ,     "py/D");
 				DircIncidenceTree->Branch("pz"     , &mDircIncidence_pz     ,     "pz/D");
-				DircIncidenceTree->Branch("t"      , &mDircIncidence_t      ,      "t/D");				
+				DircIncidenceTree->Branch("t"      , &mDircIncidence_t      ,      "t/D");
+				DircIncidenceTree->Branch("mass"   , &mDircIncidence_mass   ,   "mass/D");	// convenience
+				DircIncidenceTree->Branch("beta"   , &mDircIncidence_beta   ,   "beta/D");	// convenience
 			//
 			if (DETAIL){
 				for (int iev=0;iev<MON_nev;iev++){
@@ -177,35 +177,21 @@ namespace dd4hep {
       		//
 			if(!initialized){initializeOutputFile();}
 			//
-			//int iprocess	= mgr->GetProcessNumber();
-			//G4StepStatus istatstep	= mgr->Stepping();
-			//
 			G4Track* track	= step->GetTrack();
 			int trackID 	= track->GetTrackID();
-			int parentID	= track->GetParentID();
 			int stepNumber	= track->GetCurrentStepNumber();
-			int pdgCode		= track->GetDefinition()->GetPDGEncoding();
-			double trackLen	= track->GetTrackLength();
-			//
 			if (trackID==1 && stepNumber==1 ){	// this is the first step of new event!
 				++nSeen;
-				if (nSeen%100==0) std::cout<<"ddDIRCactionStep::operator processing "<<nSeen<<std::endl;
-				if (mDircIncidence_r>0.){		// fill (unless very first step of code run)
-					++nFill;
-					mDircIncidence_evt	= nSeen - 1;
-					DircIncidenceTree	->Fill();
-				}
-				//
-			}	// end new event block
+			}
+			int parentID	= track->GetParentID();
+			int pdgCode		= track->GetDefinition()->GetPDGEncoding();
 			//
+			currentEventID = eventManager->GetConstCurrentEvent()->GetEventID();
 			//
 			const G4ThreeVector preStepLocation  = step->GetPreStepPoint()->GetPosition();
 			const G4ThreeVector postStepLocation = step->GetPostStepPoint()->GetPosition();
 			const G4ThreeVector stepLocation     = 0.5*(preStepLocation + postStepLocation); //midpoint of step
-			int stepStatus = step->GetPreStepPoint()->GetStepStatus();
-			//
-			//G4TouchableHandle postTouchable = step->GetPostStepPoint()->GetTouchableHandle();
-			//G4ThreeVector postLocalPos = postTouchable->GetHistory()->GetTopTransform().TransformPoint(postPos);
+			int                 stepStatus       = step->GetPreStepPoint()->GetStepStatus();
 			//
 			prevname = postname = "";
 			if ( step->GetPreStepPoint()->GetPhysicalVolume() 
@@ -227,22 +213,22 @@ namespace dd4hep {
 			 && !prevname.Contains("bar_vol") 	// ...from some other volume
 			 ){									//--> this track enters a DIRC bar in this step!!!
 				//
-				//G4TouchableHandle touchable = step->GetPostStepPoint()->GetTouchableHandle();
-				//G4ThreeVector globalCenter = touchable->GetHistory()->GetTopTransform().Inverse().TransformPoint(G4ThreeVector());
-				//std::cout<<"bar volume center: "<<globalCenter.x()<<" "<<globalCenter.y()<<" "<<globalCenter.z()<<" "<<std::endl;
-				//double shortbar_Zmin	= globalCenter.z() - 1225./2.;
-				//double shortbar_Zmax	= globalCenter.z() + 1225./2.;
-				//
 				//DircIncidence_pos		= postStepLocation;
 				DircIncidence_pos		= track->GetPosition();
 				//
-				if (nSeen<20){
-					std::cout<<"incidence: "<<DircIncidence_pos.x()<<" "
+				if (DETAIL && !VERBOSE && currentEventID<20){
+					std::cout<<"dirc incidence: "<<DircIncidence_pos.x()<<" "
 							 <<DircIncidence_pos.y()<<" "
 							 <<DircIncidence_pos.z()<<" "
 							 <<std::endl;
 				}
 				//
+				//double trackLen	= track->GetTrackLength();
+				double mass		= track->GetDefinition()->GetPDGMass() / CLHEP::GeV;
+				double charge	= track->GetDefinition()->GetPDGCharge()/eplus;
+				double ptot		= track->GetMomentum().mag() / CLHEP::GeV;
+				double etot		= sqrt(ptot*ptot + mass*mass);
+				double beta		= ptot/etot;
 				DircIncidence_mom		= track->GetMomentum();
 				DircIncidence_momdir	= track->GetMomentumDirection();
 				mDircIncidence_trackID	= trackID;
@@ -251,165 +237,153 @@ namespace dd4hep {
 				mDircIncidence_y		= postStepLocation.y() / CLHEP::mm;			// mm
 				mDircIncidence_z		= postStepLocation.z() / CLHEP::mm;			// mm
 				mDircIncidence_r		= std::sqrt(mDircIncidence_x*mDircIncidence_x+mDircIncidence_y*mDircIncidence_y);	// mm
-				mDircIncidence_px		= track->GetMomentum().x() / CLHEP::GeV;	// GeV/c
-				mDircIncidence_py		= track->GetMomentum().y() / CLHEP::GeV;	// GeV/c
-				mDircIncidence_pz		= track->GetMomentum().z() / CLHEP::GeV;	// GeV/c
+				mDircIncidence_px		= track->GetMomentum().x() / CLHEP::GeV;	// GeV
+				mDircIncidence_py		= track->GetMomentum().y() / CLHEP::GeV;	// GeV
+				mDircIncidence_pz		= track->GetMomentum().z() / CLHEP::GeV;	// GeV
 				mDircIncidence_t		= track->GetGlobalTime() / CLHEP::ns;		// ns
-				//
-				//std::cout<<mDircIncidence_t<<"\t "
-				//		 <<step->GetPreStepPoint()->GetGlobalTime()<<"\t "
-				//		 <<step->GetPostStepPoint()->GetGlobalTime()<<std::endl;
-				//
+				mDircIncidence_mass		= mass;										// GeV
+				mDircIncidence_beta		= beta;										// GeV
+				mDircIncidence_evt		= currentEventID;
+				DircIncidenceTree	->Fill();
+				++nFill;
 				//
 				if (VERBOSE){
-					std::cout	<<"DIRC Incidence:  trkID="<<trackID<<" parentID="<<parentID
-								<<" step="<<stepNumber<<" pdg="<<pdgCode
-								//<<" ss= "<<istatstep
-								<<"\t pospos: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
-								<<"\t mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
+					std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" nFill="<<nFill<<" trkID="<<trackID
+								//<<" parentID="<<parentID
+								<<" step="<<stepNumber<<" pdg="<<pdgCode<<" mass="<<mass<<" beta= "<<beta<<" chg="<<charge
+								<<" posn: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
+								<<" mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
+								<<" t: "<<mDircIncidence_t<<" beta: "<<mDircIncidence_beta
 								<<std::endl;
 				}
 				//
-				//if (DETAIL){
-				//	const G4ParticleDefinition* particleDefinition	= track->GetParticleDefinition();
-				//	double amass	= particleDefinition->GetPDGMass() / CLHEP::GeV;
-				//	double mom		= DircIncidence_mom.mag() / CLHEP::GeV;
-				//	G4double ve		= sqrt(mom*mom + amass*amass);
-				//	G4double vg		= ve/amass;
-				//	G4double vb		= sqrt(1.0 - (1.0/vg/vg));
-				//	if (vb!=0.&&fabs(1.0/1.47/vb)<1.0){
-				//	 CerenkovAngleExpected	= 1000.*acos(1.0/1.47/vb);	// mrad
-				//	} else {
-				//	 CerenkovAngleExpected	= 0;
-				//	}
-				//}	// end DETAIL
 			}	// end check: primary entering bar?
 			//
-			//---- just a cout whenever the primary changes volumes...
-			if (DETAIL){
-				//
-				if (VERBOSE){				
-					if (trackID==1 && (stepStatus!=4 || prevname!=postname) ){	// primary track, but don't show steps w/in same volume
-						//
-						double stepphi	= stepLocation.phi()*(180./M_PI);
-						printf("PRIMARY\t trackID= %6d \t pdg= %6d \t parentID= %6d \t step x,y,z = %6.1f %6.1f %6.1f \t phi= %5.1f \t %d %8.2f %d \t %s %s\n", 
-							trackID, pdgCode, parentID,
-							stepLocation.x(), stepLocation.y(), stepLocation.z(),
-							stepphi,
-							stepNumber,trackLen,stepStatus,
-							prevname.Data(),postname.Data()
-							);
-						//
-						//double xpos		= postStepLocation.x() / CLHEP::mm;	// mm
-						//double ypos		= postStepLocation.y() / CLHEP::mm;	// mm
-						//double zpos		= postStepLocation.z() / CLHEP::mm;	// mm
-						//double rpos		= std::sqrt(xpos*xpos+ypos*ypos);	// mm
-						//double xpre		= preStepLocation.x() / CLHEP::mm;	// mm
-						//double ypre		= preStepLocation.y() / CLHEP::mm;	// mm
-						//double zpre		= preStepLocation.z() / CLHEP::mm;	// mm
-						//double rpre		= std::sqrt(xpre*xpre+ypre*ypre);	// mm
-						//std::cout	<<"trkID="<<trackID<<" parentID="<<parentID
-						//			<<" step="<<stepNumber<<" pdg="<<pdgCode
-						//			//<<" ss= "<<istatstep
-						//			<<"\t pospre: "<<xpre <<" "<<ypre<<" "<<zpre<<" r: "<<rpre
-						//			<<"\t pospos: "<<xpos <<" "<<ypos<<" "<<zpos<<" r: "<<rpos
-						//			<<std::endl;
-						//
-					}	// end trackID==1 at volume boundary...
-				}	// end VERBOSE
+//			//---- just a cout whenever the primary changes volumes...
+//			if (DETAIL){
+//				//
+// 				if (VERBOSE){				
+// 					if (trackID==1 && (stepStatus!=4 || prevname!=postname) ){	// primary track, but don't show steps w/in same volume
+// 						//
+// 						double stepphi	= stepLocation.phi()*(180./M_PI);
+// 						printf("PRIMARY\t trackID= %6d \t pdg= %6d \t parentID= %6d \t step x,y,z = %6.1f %6.1f %6.1f \t phi= %5.1f \t %d %8.2f %d \t %s %s\n", 
+// 							trackID, pdgCode, parentID,
+// 							stepLocation.x(), stepLocation.y(), stepLocation.z(),
+// 							stepphi,
+// 							stepNumber,trackLen,stepStatus,
+// 							prevname.Data(),postname.Data()
+// 							);
+// 						//
+// 						//double xpos		= postStepLocation.x() / CLHEP::mm;	// mm
+// 						//double ypos		= postStepLocation.y() / CLHEP::mm;	// mm
+// 						//double zpos		= postStepLocation.z() / CLHEP::mm;	// mm
+// 						//double rpos		= std::sqrt(xpos*xpos+ypos*ypos);	// mm
+// 						//double xpre		= preStepLocation.x() / CLHEP::mm;	// mm
+// 						//double ypre		= preStepLocation.y() / CLHEP::mm;	// mm
+// 						//double zpre		= preStepLocation.z() / CLHEP::mm;	// mm
+// 						//double rpre		= std::sqrt(xpre*xpre+ypre*ypre);	// mm
+// 						//std::cout	<<"trkID="<<trackID<<" parentID="<<parentID
+// 						//			<<" step="<<stepNumber<<" pdg="<<pdgCode
+// 						//			//<<" ss= "<<istatstep
+// 						//			<<"\t posn pre: "<<xpre <<" "<<ypre<<" "<<zpre<<" r: "<<rpre
+// 						//			<<"\t posn pos: "<<xpos <<" "<<ypos<<" "<<zpos<<" r: "<<rpos
+// 						//			<<std::endl;
+// 						//
+// 					}	// end trackID==1 at volume boundary...
+// 				}	// end VERBOSE
 				//
 				//---- get info from optical photons at creation!
-				double Cframe_OPtheta	= 0;
-				double Cframe_OPphi		= 0;
-				if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
-					//
-					auto thisStepPoint	= step->GetPreStepPoint();
-					//
-					G4ThreeVector OPpos	= thisStepPoint->GetPosition();	//!!!!!!! same as preStepLocation
-					G4ThreeVector OPdir	= thisStepPoint->GetMomentumDirection();
-					double thetaC_truth	= 1000.*OPdir.angle(DircIncidence_momdir);	// mrad
-					//
-					double primthe			= DircIncidence_momdir.theta();		// rad
-					double primphi			= DircIncidence_momdir.phi();		// rad
-					G4ThreeVector norm		= DircIncidence_momdir.cross(axisz);
-					G4ThreeVector OPdirRot	= OPdir; OPdirRot.rotate(primthe,norm);
-					Cframe_OPtheta			= 1000.*OPdirRot.theta();				// mrad
-					Cframe_OPphi		 	= OPdirRot.phi();						// rad
-					//
-					if (nSeen-1 < MON_nev){
-						hMON_thetaC_truth[nSeen-1]	->Fill(thetaC_truth);
-						//hMON_OPtheta[nSeen-1]		->Fill(Cframe_OPtheta);
-		 			}
-					double ringplot_x	= Cframe_OPtheta*cos(Cframe_OPphi);
-					double ringplot_y	= Cframe_OPtheta*sin(Cframe_OPphi);
-					ht1->Fill(ringplot_x,ringplot_y);
-					//
-					//---- now get polarization in the cerenkov frame
-					G4ThreeVector POLdir	= track->GetPolarization();
-					G4ThreeVector POLdirRot	= POLdir; POLdirRot.rotate(primthe,norm);
-					double dphi	= POLdirRot.phi() - Cframe_OPphi;
-					//		if (dphi <   -M_PI/2.)dphi += 2.*M_PI;
-					//		if (dphi >= 3*M_PI/2.)dphi -= 2.*M_PI;
-					//
-//std::cout<<POLdir.x()<<" "<<POLdir.y()<<" "<<POLdir.z()
-//		 <<"\t "<<(180/M_PI)*POLdir.phi()
-//		 <<"\t OPdir.angle(POLdir)= "<<OPdir.angle(POLdir)
-//		 <<"\t DircIncidence_momdir.angle(POLdir)= "<<DircIncidence_momdir.angle(POLdir)
-//		 <<std::endl;
- 					//
-					if (VERBOSE){
-						if (parentID==1){	//!!!!!!!!!! SINGLE TRACK EVENTS ASSUMED
-							std::cout<<"IDs: "<<trackID<<" "<<parentID
-									 <<"\t thetaC_truth (mrad) = "<<thetaC_truth
-									 <<" "<<Cframe_OPtheta
-									 <<"\t\t "<<POLdirRot.phi()
-									 <<" "<<Cframe_OPphi
-									 <<" "<<dphi
-									 <<std::endl;
-						}
-					}
-					//	
-					//---- let's see if these cerenkov photons are ~radially polarized...
-// 					G4ThreeVector OPpol		= track->GetPolarization();
-// 	 				G4ThreeVector p_X_g		= DircIncidence_momdir.cross(OPdir);
-// 	 				G4ThreeVector p_X_g_X_p	= p_X_g.cross(DircIncidence_momdir);	// should be radial about path.
-// 	 				double radpolang		= p_X_g_X_p.angle(OPpol);				// angle between radial dir and photon dir
+// 				double Cframe_OPtheta	= 0;
+// 				double Cframe_OPphi		= 0;
+// 				if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
+// 					//
+// 					auto thisStepPoint	= step->GetPreStepPoint();
+// 					//
+// 					G4ThreeVector OPpos	= thisStepPoint->GetPosition();	//!!!!!!! same as preStepLocation
+// 					G4ThreeVector OPdir	= thisStepPoint->GetMomentumDirection();
+// 					double thetaC_truth	= 1000.*OPdir.angle(DircIncidence_momdir);	// mrad
+// 					//
+// 					double primthe			= DircIncidence_momdir.theta();		// rad
+// 					double primphi			= DircIncidence_momdir.phi();		// rad
+// 					G4ThreeVector norm		= DircIncidence_momdir.cross(axisz);
+// 					G4ThreeVector OPdirRot	= OPdir; OPdirRot.rotate(primthe,norm);
+// 					Cframe_OPtheta			= 1000.*OPdirRot.theta();				// mrad
+// 					Cframe_OPphi		 	= OPdirRot.phi();						// rad
+// 					//
+// 					if (nSeen-1 < MON_nev){
+// 						hMON_thetaC_truth[nSeen-1]	->Fill(thetaC_truth);
+// 						//hMON_OPtheta[nSeen-1]		->Fill(Cframe_OPtheta);
+// 		 			}
+// 					double ringplot_x	= Cframe_OPtheta*cos(Cframe_OPphi);
+// 					double ringplot_y	= Cframe_OPtheta*sin(Cframe_OPphi);
+// 					ht1->Fill(ringplot_x,ringplot_y);
+// 					//
+// 					//---- now get polarization in the cerenkov frame
+// 					G4ThreeVector POLdir	= track->GetPolarization();
+// 					G4ThreeVector POLdirRot	= POLdir; POLdirRot.rotate(primthe,norm);
+// 					double dphi	= POLdirRot.phi() - Cframe_OPphi;
+// 					//		if (dphi <   -M_PI/2.)dphi += 2.*M_PI;
+// 					//		if (dphi >= 3*M_PI/2.)dphi -= 2.*M_PI;
+// 					//
+// //std::cout<<POLdir.x()<<" "<<POLdir.y()<<" "<<POLdir.z()
+// //		 <<"\t "<<(180/M_PI)*POLdir.phi()
+// //		 <<"\t OPdir.angle(POLdir)= "<<OPdir.angle(POLdir)
+// //		 <<"\t DircIncidence_momdir.angle(POLdir)= "<<DircIncidence_momdir.angle(POLdir)
+// //		 <<std::endl;
+//  					//
 // 					if (VERBOSE){
 // 						if (parentID==1){	//!!!!!!!!!! SINGLE TRACK EVENTS ASSUMED
 // 							std::cout<<"IDs: "<<trackID<<" "<<parentID
-// 									 <<"\t radpolang (rad) = "<<radpolang
-// 									 <<"\t OPpol: "<<OPpol.theta()<<" "<<OPpol.phi()
-// 									 <<"\t OPdir: "<<OPdir.theta()<<" "<<OPdir.phi()
-// 									 <<"\t p_X_g_X_p: "<<p_X_g_X_p.theta()<<" "<<p_X_g_X_p.phi()
-// 									 <<"\t angle(p,pol): "<<DircIncidence_momdir.angle(OPpol)
+// 									 <<"\t thetaC_truth (mrad) = "<<thetaC_truth
+// 									 <<" "<<Cframe_OPtheta
+// 									 <<"\t\t "<<POLdirRot.phi()
+// 									 <<" "<<Cframe_OPphi
+// 									 <<" "<<dphi
 // 									 <<std::endl;
-// 						}	// end parentID check
-// 					}	// end verbose
-					//
-	// 				if (parentID==1){		//!!!!!!!!!! SINGLE TRACK EVENTS ASSUMED
-	// 					ht1->Fill(OPdir.theta(),OPpol.theta());
-	// 					ht2->Fill(OPdir.phi(),OPpol.phi());
-	// 					ht3->Fill(p_X_g.phi(),OPpol.theta());
-	// 					ht4->Fill(p_X_g.theta(),OPpol.phi());
-	// 					ht5->Fill(p_X_g_X_p.theta(),OPpol.theta());
-	// 					ht6->Fill(p_X_g_X_p.phi(),OPpol.phi());
-	// 				}	// end parentID==1 check
-
-
-					//
-					//
-					//std::cout<<"OPdir: "<<OPdir.x()<<" "<<OPdir.y()<<" "<<OPdir.z()
-					//		 <<"\t OPpol: "<<OPpol.x()<<" "<<OPpol.y()<<" "<<OPpol.z()
-					//		 <<std::endl;
-					//	printf("OP     \t trackID= %6d \t pdg= %6d \t parentID= %6d \t step x,y,z = %6.1f %6.1f %6.1f \t phi= %5.1f \t %d %8.2f %d \n", 
-					//		trackID, pdgCode, parentID,
-					//		stepLocation.x(), stepLocation.y(), stepLocation.z(),
-					//		stepphi,
-					//		stepNumber,trackLen,stepStatus);
-					//
-					//
-				}	// end OP at creation
-			}	// end DETAIL
+// 						}
+// 					}
+// 					//	
+// 					//---- let's see if these cerenkov photons are ~radially polarized...
+// // 					G4ThreeVector OPpol		= track->GetPolarization();
+// // 	 				G4ThreeVector p_X_g		= DircIncidence_momdir.cross(OPdir);
+// // 	 				G4ThreeVector p_X_g_X_p	= p_X_g.cross(DircIncidence_momdir);	// should be radial about path.
+// // 	 				double radpolang		= p_X_g_X_p.angle(OPpol);				// angle between radial dir and photon dir
+// // 					if (VERBOSE){
+// // 						if (parentID==1){	//!!!!!!!!!! SINGLE TRACK EVENTS ASSUMED
+// // 							std::cout<<"IDs: "<<trackID<<" "<<parentID
+// // 									 <<"\t radpolang (rad) = "<<radpolang
+// // 									 <<"\t OPpol: "<<OPpol.theta()<<" "<<OPpol.phi()
+// // 									 <<"\t OPdir: "<<OPdir.theta()<<" "<<OPdir.phi()
+// // 									 <<"\t p_X_g_X_p: "<<p_X_g_X_p.theta()<<" "<<p_X_g_X_p.phi()
+// // 									 <<"\t angle(p,pol): "<<DircIncidence_momdir.angle(OPpol)
+// // 									 <<std::endl;
+// // 						}	// end parentID check
+// // 					}	// end verbose
+// 					//
+// 	// 				if (parentID==1){		//!!!!!!!!!! SINGLE TRACK EVENTS ASSUMED
+// 	// 					ht1->Fill(OPdir.theta(),OPpol.theta());
+// 	// 					ht2->Fill(OPdir.phi(),OPpol.phi());
+// 	// 					ht3->Fill(p_X_g.phi(),OPpol.theta());
+// 	// 					ht4->Fill(p_X_g.theta(),OPpol.phi());
+// 	// 					ht5->Fill(p_X_g_X_p.theta(),OPpol.theta());
+// 	// 					ht6->Fill(p_X_g_X_p.phi(),OPpol.phi());
+// 	// 				}	// end parentID==1 check
+// 
+// 
+// 					//
+// 					//
+// 					//std::cout<<"OPdir: "<<OPdir.x()<<" "<<OPdir.y()<<" "<<OPdir.z()
+// 					//		 <<"\t OPpol: "<<OPpol.x()<<" "<<OPpol.y()<<" "<<OPpol.z()
+// 					//		 <<std::endl;
+// 					//	printf("OP     \t trackID= %6d \t pdg= %6d \t parentID= %6d \t step x,y,z = %6.1f %6.1f %6.1f \t phi= %5.1f \t %d %8.2f %d \n", 
+// 					//		trackID, pdgCode, parentID,
+// 					//		stepLocation.x(), stepLocation.y(), stepLocation.z(),
+// 					//		stepphi,
+// 					//		stepNumber,trackLen,stepStatus);
+// 					//
+// 					//
+// 				}	// end OP at creation
+//			}	// end DETAIL
 			//
 			//if (pdgCode==-22 && stepNumber==1 && parentID!=1 ){		// OP but created by OTHER THAN THE PRIMARY
 			//	//
@@ -427,6 +401,8 @@ namespace dd4hep {
      private:
 		bool initialized = false;
 		//
+		G4EventManager* eventManager;
+		//
 		G4ThreeVector DircIncidence_pos;
 		G4ThreeVector DircIncidence_mom;
 		G4ThreeVector DircIncidence_momdir;
@@ -434,14 +410,17 @@ namespace dd4hep {
 		int    mDircIncidence_evt     = 0; 
 		int    mDircIncidence_trackID = 0; 
 		int    mDircIncidence_pdgCode = 0; 
-		double mDircIncidence_x   = 0; 
-		double mDircIncidence_y   = 0; 
-		double mDircIncidence_z   = 0; 
-		double mDircIncidence_r   = 0; 
-		double mDircIncidence_px  = 0;
-		double mDircIncidence_py  = 0;
-		double mDircIncidence_pz  = 0;
-		double mDircIncidence_t   = 0;
+		double mDircIncidence_x       = 0; 
+		double mDircIncidence_y       = 0; 
+		double mDircIncidence_z       = 0; 
+		double mDircIncidence_r       = 0; 
+		double mDircIncidence_px      = 0;
+		double mDircIncidence_py      = 0;
+		double mDircIncidence_pz      = 0;
+		double mDircIncidence_t       = 0;
+		double mDircIncidence_mass    = 0;
+		double mDircIncidence_beta    = 0;
+		int	currentEventID	= 0;
 		int nSeen	= 0;
 		int nFill	= 0;
 		//
@@ -546,66 +525,3 @@ namespace dd4hep {
 // 		//	<<"\t "<<x<<" "<<y<<" "<<z
 // 		//	<<std::endl;
 // 		//
-// 		analysisManager	->FillH1( analysisManager->GetH1Id("hOPexittheta") ,theta,  1.0);
-// 		analysisManager	->FillH1( analysisManager->GetH1Id("hOPexitphi")   ,phi,    1.0);
-// 		analysisManager	->FillH2( analysisManager->GetH2Id("hExitPoint")   ,exitx  ,exity  ,1.0);
-// 		analysisManager	->FillH1( analysisManager->GetH1Id("hTime")        ,time,   1.0);
-// 		analysisManager	->FillH1( analysisManager->GetH1Id("hNbounce")     ,std::min(Nbounce,4999),1.0);
-// 		analysisManager	->FillH2( analysisManager->GetH2Id("hTimeNbounce")    ,std::min(Nbounce,499),time,1.0);
-// 		analysisManager	->FillH2( analysisManager->GetH2Id("hTimeNbounceWide"),std::min(Nbounce,4999),time,1.0);
-// 		analysisManager	->FillH2( analysisManager->GetH2Id("hPattern")     ,screenx,screeny,1.0);
-// 		if (ieta>=0&&ieta<72){
-// 			snprintf(buf,200,"hPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny,1.0);
-// 			snprintf(buf,200,"htimePattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny,time);
-// 			snprintf(buf,200,"hNbouncePattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny,Nbounce);
-// 			snprintf(buf,200,"hTimeNbounce_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,Nbounce,time);
-// 			//
-// 			snprintf(buf,200,"hAngDepPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, barangledepth/deg );
-// 			snprintf(buf,200,"hAngWidPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, baranglewidth/deg );
-// 			snprintf(buf,200,"hAngLenPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, baranglelength/deg );
-// 			snprintf(buf,200,"hAngThetaPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, barangletheta/mrad );
-// 			snprintf(buf,200,"hAngPhiPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, baranglephi/deg );
-// 			//
-// 			snprintf(buf,200,"hCerenkovPhiPattern_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,screenx,screeny, cerenkovphi/deg );
-// 			//
-// 			snprintf(buf,200,"hCerenkovRing_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,ringx,ringy, 1.0 );
-// 			snprintf(buf,200,"hCerenkovTheta_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovtheta/mrad, 1.0 );
-// 			snprintf(buf,200,"hCerenkovPhi_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovphi/deg, 1.0 );
-// 			//
-// 			snprintf(buf,200,"hCerenkovThetaEndVsTheta_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,cerenkovtheta/mrad, cerenkovtheta_end/mrad, 1.0 );
-// 			snprintf(buf,200,"hCerenkovThetaEndMinusTheta_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovtheta_end/mrad - cerenkovtheta/mrad,  1.0 );
-// 			snprintf(buf,200,"hCerenkovThetaEnd_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovtheta_end/mrad,  1.0 );
-// 			//if (cerenkovtheta_end<M_PI/2.){
-// 			//	snprintf(buf,200,"hCerenkovThetaEndA_eta%d",ieta);
-// 			//	analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovtheta_end/mrad,  1.0 );
-// 			//} else if (cerenkovtheta_end>=M_PI/2.){
-// 			//	snprintf(buf,200,"hCerenkovThetaEndB_eta%d",ieta);
-// 			//	analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,180.-(cerenkovtheta_end/mrad),  1.0 );
-// 			//}
-// 			snprintf(buf,200,"hBestAmbiguity_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,indbest,  1.0 );
-// 			snprintf(buf,200,"hCerenkovThetaEndBest_eta%d",ieta);
-// 			analysisManager	->FillH1( analysisManager->GetH1Id(buf) ,cerenkovtheta_end_AMBbest/mrad,  1.0 );
-// 			snprintf(buf,200,"hCerenkovThetaEndBestVsTheta_eta%d",ieta);
-// 			analysisManager	->FillH2( analysisManager->GetH2Id(buf) ,cerenkovtheta/mrad, cerenkovtheta_end_AMBbest/mrad, 1.0 );
-// 			//
-// 		}
-// 		//
-//  	}
-// 	if (nbou_n){ nbou /= nbou_n; }else{ nbou = 0; }
