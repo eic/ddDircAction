@@ -55,10 +55,10 @@ namespace dd4hep {
 			//
 			std::cout<<"ddDIRCactionStep -- mDetailLevel = "<<mDetailLevel<<std::endl;
 			//
-		} ;
+		};	//---- end ctor
 		//
 		//---------------------------------------------------------------------------------------------------- 
-		// Default destructor
+		//---- Default destructor
 		virtual ~ddDIRCactionStep() {
 			//
 			if (steppingOutput) {
@@ -85,8 +85,9 @@ namespace dd4hep {
 				std::cout << "ddDIRCactionStep -- nSeen = " << nSeen << std::endl;
 				std::cout << "ddDIRCactionStep -- nFill = " << nFill << std::endl;
 				//
-			}		
-		};
+			}
+			//
+		};	//---- end dtor
 
 		//---------------------------------------------------------------------------------------------------- 
 		void initializeOutputFile(){			
@@ -147,9 +148,10 @@ namespace dd4hep {
 			}	// end DETAIL
 			//
 			initialized = true;
-		}
+			//
+		}	//---- end initializeOutputFile()
 
-		//
+		//--------------------------------------------------------------------------------
 		//	bars polar max approx	 22.65 deg
 		//	bars polar min approx	164.3  deg
 		//
@@ -173,7 +175,8 @@ namespace dd4hep {
 		//		765.875 -17.575  1,261.0125
 		//
 		//---------------------------------------------------------------------------------------------------- 
-		// Pre-track action callback
+		//---- Pre-track action callback
+		//
 		virtual void operator()(const G4Step* step, G4SteppingManager* mgr) override {
       		//
 			if(!initialized){initializeOutputFile();}
@@ -188,11 +191,12 @@ namespace dd4hep {
 				}
 				DircIncidenceTree->Fill();
 				++nFill;
-				iEntryIncCurrent	= 0;
+				iEntryIncCurrent	=  0;
+//				trackIDprev			= -1;
 			}
 			//
 			G4Track* track	= step->GetTrack();
-			int trackID 	= track->GetTrackID();
+			trackID 		= track->GetTrackID();
 			int stepNumber	= track->GetCurrentStepNumber();
 			if (trackID==1 && stepNumber==1 ){ ++nSeen; }
 			int parentID	= track->GetParentID();
@@ -218,7 +222,8 @@ namespace dd4hep {
 			//
 			if (parentID==0 && stepStatus==1 	// parentID==0 taken to indicate PRIMARY GENERATED particle
 			 &&  postname.Contains("bar_vol") 	// enters bar_vol...
-			 && !prevname.Contains("bar_vol") 	// ...from some other volume
+			 && !prevname.Contains("bar_vol") 	// ...from some other volume (but not glue_vol)
+			 && !prevname.Contains("glue_vol") 	// crossing glue layers only happens INSIDE bars, so not a new incidence!!!
 			 ){									//--> this track enters a DIRC bar in this step!!!
 				//
 				//DircIncidence_pos		= postStepLocation;
@@ -241,6 +246,13 @@ namespace dd4hep {
 				if (fabs(charge)>0. && mass>0. && beta>1./1.5){
 					//
 					if (iEntryIncCurrent < MAXDircIncidence){
+						//
+						int kstrindex	= postname.Index("bar_vol_");
+						TString barvol	= postname;
+								barvol.Remove(0,kstrindex+8);
+						int		kbarvol	= atoi(barvol.Data());		//!!! SAVE TO TREE !!!
+						//std::cout<<postname<<"\t "<<kstrindex<<"\t "<<barvol<<" "<<kbarvol<<std::endl;
+						//
 						DircIncidence_mom		= track->GetMomentum();
 						DircIncidence_momdir	= track->GetMomentumDirection();
 						mDircIncidence_evt							= currentEventID;
@@ -258,11 +270,12 @@ namespace dd4hep {
 						mDircIncidence_mass[iEntryIncCurrent]		= mass;										// GeV
 						mDircIncidence_beta[iEntryIncCurrent]		= beta;										// GeV
 						if (VERBOSE){
+							TString prevname2 = prevname; if (prevname2.Contains("AV_25!DIRC_0#0!")){ prevname2.ReplaceAll("AV_25!DIRC_0#0!",""); prevname2.ReplaceAll("#0",""); }
 							std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" iFill="<<iEntryIncCurrent<<" trkID="<<trackID
-										//<<" parentID="<<parentID
-										<<" step="<<stepNumber
+										<<" Volumes="<<prevname2.Data()<<"->"<<postname.Data()
+										//<<" step="<<stepNumber
 										<<" pdg="<<pdgCode
-										<<" mass="<<mass
+										//<<" mass="<<mass
 										<<" beta= "<<mDircIncidence_beta[iEntryIncCurrent]
 										<<" chg="<<charge
 										<<" posn: "<<mDircIncidence_x[iEntryIncCurrent] <<" "<<mDircIncidence_y[iEntryIncCurrent]<<" "<<mDircIncidence_z[iEntryIncCurrent]<<" r: "<<mDircIncidence_r[iEntryIncCurrent]
@@ -272,6 +285,7 @@ namespace dd4hep {
 						}
 						++iEntryIncCurrent;
 						currentEventIDprev	= currentEventID;
+//						trackIDprev			= trackID;
 					} else {
 						std::cout<<"Incidence tree overflow!!   ...increase MAXDircIncidence: "<<MAXDircIncidence<<std::endl;
 						exit(0);
@@ -281,6 +295,56 @@ namespace dd4hep {
 				//
 			}	// end check: primary entering bar?
 			//
+			//---> commented code block at end of file below went HERE <---			
+			//
+		}	// end operator function
+ 
+     private:
+		bool initialized = false;
+		//
+		G4EventManager* eventManager;
+		//
+		G4ThreeVector DircIncidence_pos;
+		G4ThreeVector DircIncidence_mom;
+		G4ThreeVector DircIncidence_momdir;
+		TString prevname="",postname="";
+		static const int MAXDircIncidence		= 100;
+		int    mDircIncidence_evt     			=  0 ; 
+		int    mDircIncidence_ninc				=  0 ;
+		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
+		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
+		inline static double mDircIncidence_x[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_y[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_z[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_r[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_px[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_py[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_pz[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_t[MAXDircIncidence]       = {0};
+		inline static double mDircIncidence_mass[MAXDircIncidence]    = {0};
+		inline static double mDircIncidence_beta[MAXDircIncidence]    = {0};
+		int	currentEventID		= 0;
+		int	currentEventIDprev	= -1;
+		int iEntryIncCurrent	= 0;
+		int nSeen	= 0;
+		int nFill	= 0;
+		int trackID;
+//		int trackIDprev;
+		//
+		bool VERBOSE	= false;
+		bool DETAIL		= false;
+		//double CerenkovAngleExpected = 0;
+		G4ThreeVector axisy		= G4ThreeVector(0.,1.,0.);
+		G4ThreeVector axisz		= G4ThreeVector(0.,0.,1.);
+
+  };	// End class definition
+  }		// End namespace sim
+}		// End namespace dd4hep
+
+#endif
+
+
+
 //			//---- just a cout whenever the primary changes volumes...
 //			if (DETAIL){
 //				//
@@ -417,48 +481,4 @@ namespace dd4hep {
 			//		stepNumber,trackLen,stepStatus);
 			//	//
 			//}
-			//
-		}	// end operator function
- 
-     private:
-		bool initialized = false;
-		//
-		G4EventManager* eventManager;
-		//
-		G4ThreeVector DircIncidence_pos;
-		G4ThreeVector DircIncidence_mom;
-		G4ThreeVector DircIncidence_momdir;
-		TString prevname="",postname="";
-		static const int MAXDircIncidence		= 100;
-		int    mDircIncidence_evt     			=  0 ; 
-		int    mDircIncidence_ninc				=  0 ;
-		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
-		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
-		inline static double mDircIncidence_x[MAXDircIncidence]       = {0}; 
-		inline static double mDircIncidence_y[MAXDircIncidence]       = {0}; 
-		inline static double mDircIncidence_z[MAXDircIncidence]       = {0}; 
-		inline static double mDircIncidence_r[MAXDircIncidence]       = {0}; 
-		inline static double mDircIncidence_px[MAXDircIncidence]      = {0};
-		inline static double mDircIncidence_py[MAXDircIncidence]      = {0};
-		inline static double mDircIncidence_pz[MAXDircIncidence]      = {0};
-		inline static double mDircIncidence_t[MAXDircIncidence]       = {0};
-		inline static double mDircIncidence_mass[MAXDircIncidence]    = {0};
-		inline static double mDircIncidence_beta[MAXDircIncidence]    = {0};
-		int	currentEventID		= 0;
-		int	currentEventIDprev	= -1;
-		int iEntryIncCurrent	= 0;
-		int nSeen	= 0;
-		int nFill	= 0;
-		//
-		bool VERBOSE	= false;
-		bool DETAIL		= false;
-		//double CerenkovAngleExpected = 0;
-		G4ThreeVector axisy		= G4ThreeVector(0.,1.,0.);
-		G4ThreeVector axisz		= G4ThreeVector(0.,0.,1.);
-
-  };	// End class definition
-  }		// End namespace sim
-}		// End namespace dd4hep
-
-#endif
 
