@@ -240,37 +240,42 @@ namespace dd4hep {
 				//
 				if (fabs(charge)>0. && mass>0. && beta>1./1.5){
 					//
-					DircIncidence_mom		= track->GetMomentum();
-					DircIncidence_momdir	= track->GetMomentumDirection();
-					mDircIncidence_evt							= currentEventID;
-					mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
-					mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
-					mDircIncidence_x[iEntryIncCurrent]			= postStepLocation.x() / CLHEP::mm;			// mm
-					mDircIncidence_y[iEntryIncCurrent]			= postStepLocation.y() / CLHEP::mm;			// mm
-					mDircIncidence_z[iEntryIncCurrent]			= postStepLocation.z() / CLHEP::mm;			// mm
-					mDircIncidence_r[iEntryIncCurrent]			= std::sqrt(mDircIncidence_x[iEntryIncCurrent]*mDircIncidence_x[iEntryIncCurrent]
-																		   +mDircIncidence_y[iEntryIncCurrent]*mDircIncidence_y[iEntryIncCurrent]);	// mm
-					mDircIncidence_px[iEntryIncCurrent]			= track->GetMomentum().x() / CLHEP::GeV;	// GeV
-					mDircIncidence_py[iEntryIncCurrent]			= track->GetMomentum().y() / CLHEP::GeV;	// GeV
-					mDircIncidence_pz[iEntryIncCurrent]			= track->GetMomentum().z() / CLHEP::GeV;	// GeV
-					mDircIncidence_t[iEntryIncCurrent]			= track->GetGlobalTime() / CLHEP::ns;		// ns
-					mDircIncidence_mass[iEntryIncCurrent]		= mass;										// GeV
-					mDircIncidence_beta[iEntryIncCurrent]		= beta;										// GeV
-					if (VERBOSE){
-						std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" iFill="<<iEntryIncCurrent<<" trkID="<<trackID
-									//<<" parentID="<<parentID
-									<<" step="<<stepNumber
-									<<" pdg="<<pdgCode
-									<<" mass="<<mass
-									<<" beta= "<<mDircIncidence_beta[iEntryIncCurrent]
-									<<" chg="<<charge
-									<<" posn: "<<mDircIncidence_x[iEntryIncCurrent] <<" "<<mDircIncidence_y[iEntryIncCurrent]<<" "<<mDircIncidence_z[iEntryIncCurrent]<<" r: "<<mDircIncidence_r[iEntryIncCurrent]
-									<<" mom: "<<mDircIncidence_px[iEntryIncCurrent]<<" "<<mDircIncidence_py[iEntryIncCurrent]<<" "<<mDircIncidence_pz[iEntryIncCurrent]
-									<<" t: "<<mDircIncidence_t[iEntryIncCurrent]
-									<<std::endl;
+					if (iEntryIncCurrent < MAXDircIncidence){
+						DircIncidence_mom		= track->GetMomentum();
+						DircIncidence_momdir	= track->GetMomentumDirection();
+						mDircIncidence_evt							= currentEventID;
+						mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
+						mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
+						mDircIncidence_x[iEntryIncCurrent]			= postStepLocation.x() / CLHEP::mm;			// mm
+						mDircIncidence_y[iEntryIncCurrent]			= postStepLocation.y() / CLHEP::mm;			// mm
+						mDircIncidence_z[iEntryIncCurrent]			= postStepLocation.z() / CLHEP::mm;			// mm
+						mDircIncidence_r[iEntryIncCurrent]			= std::sqrt(mDircIncidence_x[iEntryIncCurrent]*mDircIncidence_x[iEntryIncCurrent]
+																			   +mDircIncidence_y[iEntryIncCurrent]*mDircIncidence_y[iEntryIncCurrent]);	// mm
+						mDircIncidence_px[iEntryIncCurrent]			= track->GetMomentum().x() / CLHEP::GeV;	// GeV
+						mDircIncidence_py[iEntryIncCurrent]			= track->GetMomentum().y() / CLHEP::GeV;	// GeV
+						mDircIncidence_pz[iEntryIncCurrent]			= track->GetMomentum().z() / CLHEP::GeV;	// GeV
+						mDircIncidence_t[iEntryIncCurrent]			= track->GetGlobalTime() / CLHEP::ns;		// ns
+						mDircIncidence_mass[iEntryIncCurrent]		= mass;										// GeV
+						mDircIncidence_beta[iEntryIncCurrent]		= beta;										// GeV
+						if (VERBOSE){
+							std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" iFill="<<iEntryIncCurrent<<" trkID="<<trackID
+										//<<" parentID="<<parentID
+										<<" step="<<stepNumber
+										<<" pdg="<<pdgCode
+										<<" mass="<<mass
+										<<" beta= "<<mDircIncidence_beta[iEntryIncCurrent]
+										<<" chg="<<charge
+										<<" posn: "<<mDircIncidence_x[iEntryIncCurrent] <<" "<<mDircIncidence_y[iEntryIncCurrent]<<" "<<mDircIncidence_z[iEntryIncCurrent]<<" r: "<<mDircIncidence_r[iEntryIncCurrent]
+										<<" mom: "<<mDircIncidence_px[iEntryIncCurrent]<<" "<<mDircIncidence_py[iEntryIncCurrent]<<" "<<mDircIncidence_pz[iEntryIncCurrent]
+										<<" t: "<<mDircIncidence_t[iEntryIncCurrent]
+										<<std::endl;
+						}
+						++iEntryIncCurrent;
+						currentEventIDprev	= currentEventID;
+					} else {
+						std::cout<<"Incidence tree overflow!!   ...increase MAXDircIncidence: "<<MAXDircIncidence<<std::endl;
+						exit(0);
 					}
-					++iEntryIncCurrent;
-					currentEventIDprev	= currentEventID;
 					//
 				}
 				//
