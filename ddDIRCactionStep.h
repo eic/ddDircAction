@@ -115,18 +115,19 @@ namespace dd4hep {
 			steppingOutput    = new TFile(inputFileString, "RECREATE");
 			//
 			DircIncidenceTree	= new TTree("DircIncidenceTree","tree with kinematics of particles hitting dirc");			
-				DircIncidenceTree->Branch("evt"    , &mDircIncidence_evt    ,    "evt/I");
-				DircIncidenceTree->Branch("trackID", &mDircIncidence_trackID,"trackID/I");
-				DircIncidenceTree->Branch("pdgCode", &mDircIncidence_pdgCode,"pdgCode/I");
-				DircIncidenceTree->Branch("x"      , &mDircIncidence_x      ,      "x/D");
-				DircIncidenceTree->Branch("y"      , &mDircIncidence_y      ,      "y/D");
-				DircIncidenceTree->Branch("z"      , &mDircIncidence_z      ,      "z/D");
-				DircIncidenceTree->Branch("px"     , &mDircIncidence_px     ,     "px/D");
-				DircIncidenceTree->Branch("py"     , &mDircIncidence_py     ,     "py/D");
-				DircIncidenceTree->Branch("pz"     , &mDircIncidence_pz     ,     "pz/D");
-				DircIncidenceTree->Branch("t"      , &mDircIncidence_t      ,      "t/D");
-				DircIncidenceTree->Branch("mass"   , &mDircIncidence_mass   ,   "mass/D");	// convenience
-				DircIncidenceTree->Branch("beta"   , &mDircIncidence_beta   ,   "beta/D");	// convenience
+				DircIncidenceTree->Branch("evt"    , &mDircIncidence_evt    ,           "evt/I");
+				DircIncidenceTree->Branch("ninc"   , &mDircIncidence_ninc   ,          "ninc/I");
+				DircIncidenceTree->Branch("trackID", mDircIncidence_trackID , "trackID[ninc]/I");
+				DircIncidenceTree->Branch("pdgCode", mDircIncidence_pdgCode , "pdgCode[ninc]/I");
+				DircIncidenceTree->Branch("x"      , mDircIncidence_x       ,       "x[ninc]/D");
+				DircIncidenceTree->Branch("y"      , mDircIncidence_y       ,       "y[ninc]/D");
+				DircIncidenceTree->Branch("z"      , mDircIncidence_z       ,       "z[ninc]/D");
+				DircIncidenceTree->Branch("px"     , mDircIncidence_px      ,      "px[ninc]/D");
+				DircIncidenceTree->Branch("py"     , mDircIncidence_py      ,      "py[ninc]/D");
+				DircIncidenceTree->Branch("pz"     , mDircIncidence_pz      ,      "pz[ninc]/D");
+				DircIncidenceTree->Branch("t"      , mDircIncidence_t       ,       "t[ninc]/D");
+				DircIncidenceTree->Branch("mass"   , mDircIncidence_mass    ,    "mass[ninc]/D");	// convenience
+				DircIncidenceTree->Branch("beta"   , mDircIncidence_beta    ,    "beta[ninc]/D");	// convenience
 			//
 			if (DETAIL){
 				for (int iev=0;iev<MON_nev;iev++){
@@ -177,22 +178,29 @@ namespace dd4hep {
       		//
 			if(!initialized){initializeOutputFile();}
 			//
+			currentEventID	= eventManager->GetConstCurrentEvent()->GetEventID();
+			//
+			if (currentEventIDprev>=0 && currentEventID!=currentEventIDprev && iEntryIncCurrent>0){
+				//---- Fill tree!!!
+				mDircIncidence_ninc	= iEntryIncCurrent;
+				if (VERBOSE){
+					std::cout<<"  ...Filling!   evt="<<mDircIncidence_evt<<"\t Ninc="<<mDircIncidence_ninc<<std::endl;
+				}
+				DircIncidenceTree->Fill();
+				++nFill;
+				iEntryIncCurrent	= 0;
+			}
+			//
 			G4Track* track	= step->GetTrack();
 			int trackID 	= track->GetTrackID();
 			int stepNumber	= track->GetCurrentStepNumber();
-			if (trackID==1 && stepNumber==1 ){	// this is the first step of new event!
-				++nSeen;
-			}
+			if (trackID==1 && stepNumber==1 ){ ++nSeen; }
 			int parentID	= track->GetParentID();
 			int pdgCode		= track->GetDefinition()->GetPDGEncoding();
-			//
-			currentEventID = eventManager->GetConstCurrentEvent()->GetEventID();
-			//
 			const G4ThreeVector preStepLocation  = step->GetPreStepPoint()->GetPosition();
 			const G4ThreeVector postStepLocation = step->GetPostStepPoint()->GetPosition();
 			const G4ThreeVector stepLocation     = 0.5*(preStepLocation + postStepLocation); //midpoint of step
 			int                 stepStatus       = step->GetPreStepPoint()->GetStepStatus();
-			//
 			prevname = postname = "";
 			if ( step->GetPreStepPoint()->GetPhysicalVolume() 
 			  && step->GetPostStepPoint()->GetPhysicalVolume() ) {
@@ -234,35 +242,35 @@ namespace dd4hep {
 					//
 					DircIncidence_mom		= track->GetMomentum();
 					DircIncidence_momdir	= track->GetMomentumDirection();
-					mDircIncidence_trackID	= trackID;
-					mDircIncidence_pdgCode	= pdgCode;
-					mDircIncidence_x		= postStepLocation.x() / CLHEP::mm;			// mm
-					mDircIncidence_y		= postStepLocation.y() / CLHEP::mm;			// mm
-					mDircIncidence_z		= postStepLocation.z() / CLHEP::mm;			// mm
-					mDircIncidence_r		= std::sqrt(mDircIncidence_x*mDircIncidence_x+mDircIncidence_y*mDircIncidence_y);	// mm
-					mDircIncidence_px		= track->GetMomentum().x() / CLHEP::GeV;	// GeV
-					mDircIncidence_py		= track->GetMomentum().y() / CLHEP::GeV;	// GeV
-					mDircIncidence_pz		= track->GetMomentum().z() / CLHEP::GeV;	// GeV
-					mDircIncidence_t		= track->GetGlobalTime() / CLHEP::ns;		// ns
-					mDircIncidence_mass		= mass;										// GeV
-					mDircIncidence_beta		= beta;										// GeV
-					mDircIncidence_evt		= currentEventID;
-					DircIncidenceTree	->Fill();
-					++nFill;
-					//
+					mDircIncidence_evt							= currentEventID;
+					mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
+					mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
+					mDircIncidence_x[iEntryIncCurrent]			= postStepLocation.x() / CLHEP::mm;			// mm
+					mDircIncidence_y[iEntryIncCurrent]			= postStepLocation.y() / CLHEP::mm;			// mm
+					mDircIncidence_z[iEntryIncCurrent]			= postStepLocation.z() / CLHEP::mm;			// mm
+					mDircIncidence_r[iEntryIncCurrent]			= std::sqrt(mDircIncidence_x[iEntryIncCurrent]*mDircIncidence_x[iEntryIncCurrent]
+																		   +mDircIncidence_y[iEntryIncCurrent]*mDircIncidence_y[iEntryIncCurrent]);	// mm
+					mDircIncidence_px[iEntryIncCurrent]			= track->GetMomentum().x() / CLHEP::GeV;	// GeV
+					mDircIncidence_py[iEntryIncCurrent]			= track->GetMomentum().y() / CLHEP::GeV;	// GeV
+					mDircIncidence_pz[iEntryIncCurrent]			= track->GetMomentum().z() / CLHEP::GeV;	// GeV
+					mDircIncidence_t[iEntryIncCurrent]			= track->GetGlobalTime() / CLHEP::ns;		// ns
+					mDircIncidence_mass[iEntryIncCurrent]		= mass;										// GeV
+					mDircIncidence_beta[iEntryIncCurrent]		= beta;										// GeV
 					if (VERBOSE){
-						std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" nFill="<<nFill<<" trkID="<<trackID
+						std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" iFill="<<iEntryIncCurrent<<" trkID="<<trackID
 									//<<" parentID="<<parentID
 									<<" step="<<stepNumber
 									<<" pdg="<<pdgCode
 									<<" mass="<<mass
-									<<" beta= "<<mDircIncidence_beta
+									<<" beta= "<<mDircIncidence_beta[iEntryIncCurrent]
 									<<" chg="<<charge
-									<<" posn: "<<mDircIncidence_x <<" "<<mDircIncidence_y<<" "<<mDircIncidence_z<<" r: "<<mDircIncidence_r
-									<<" mom: "<<mDircIncidence_px<<" "<<mDircIncidence_py<<" "<<mDircIncidence_pz
-									<<" t: "<<mDircIncidence_t
+									<<" posn: "<<mDircIncidence_x[iEntryIncCurrent] <<" "<<mDircIncidence_y[iEntryIncCurrent]<<" "<<mDircIncidence_z[iEntryIncCurrent]<<" r: "<<mDircIncidence_r[iEntryIncCurrent]
+									<<" mom: "<<mDircIncidence_px[iEntryIncCurrent]<<" "<<mDircIncidence_py[iEntryIncCurrent]<<" "<<mDircIncidence_pz[iEntryIncCurrent]
+									<<" t: "<<mDircIncidence_t[iEntryIncCurrent]
 									<<std::endl;
 					}
+					++iEntryIncCurrent;
+					currentEventIDprev	= currentEventID;
 					//
 				}
 				//
@@ -416,20 +424,24 @@ namespace dd4hep {
 		G4ThreeVector DircIncidence_mom;
 		G4ThreeVector DircIncidence_momdir;
 		TString prevname="",postname="";
-		int    mDircIncidence_evt     = 0; 
-		int    mDircIncidence_trackID = 0; 
-		int    mDircIncidence_pdgCode = 0; 
-		double mDircIncidence_x       = 0; 
-		double mDircIncidence_y       = 0; 
-		double mDircIncidence_z       = 0; 
-		double mDircIncidence_r       = 0; 
-		double mDircIncidence_px      = 0;
-		double mDircIncidence_py      = 0;
-		double mDircIncidence_pz      = 0;
-		double mDircIncidence_t       = 0;
-		double mDircIncidence_mass    = 0;
-		double mDircIncidence_beta    = 0;
-		int	currentEventID	= 0;
+		static const int MAXDircIncidence		= 100;
+		int    mDircIncidence_evt     			=  0 ; 
+		int    mDircIncidence_ninc				=  0 ;
+		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
+		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
+		inline static double mDircIncidence_x[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_y[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_z[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_r[MAXDircIncidence]       = {0}; 
+		inline static double mDircIncidence_px[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_py[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_pz[MAXDircIncidence]      = {0};
+		inline static double mDircIncidence_t[MAXDircIncidence]       = {0};
+		inline static double mDircIncidence_mass[MAXDircIncidence]    = {0};
+		inline static double mDircIncidence_beta[MAXDircIncidence]    = {0};
+		int	currentEventID		= 0;
+		int	currentEventIDprev	= -1;
+		int iEntryIncCurrent	= 0;
 		int nSeen	= 0;
 		int nFill	= 0;
 		//
