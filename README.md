@@ -22,19 +22,21 @@ export LD_LIBRARY_PATH=/Users/sp/eic/ddDircAction/install/lib:${LD_LIBRARY_PATH}
 ```
 and you need to change the parts of this path that are in front of eic/ddDircAction/install/lib .
 
-Running the code will produce a root file containing the "incidence tree". This tree is completely flat, has 9 columns, and is filled once for each and every track in the event with parentID = 0 (this is presently how i am flagging "primary" generated tracks) that impinges on any DIRC bar.
+Running the code will produce a root file containing the "incidence tree". This tree is filled once per event with variable length arrays holding the information at incidence of every particle with parentID = 0 that enters a DIRC bar from the air outside a DIRC bar. There are "ninc" incident particles per event. The tree format is like this:
 ```
-  event number (starting from zero), 
-  G4 trackID number, 
-  pdgCode, 
-  3 position doubles (x y z, in mm),
-  3 momentum doubles (px py pz, in GeV), and
-  1 time double (t, in ns)
+  event number (starting from zero),
+  Number of bar-incident particles in this event ("ninc")
+  G4 trackID number[ninc], 
+  pdgCode[ninc],
+  3 position doubles (x[ninc], y[ninc], z[ninc], in mm),
+  3 momentum doubles (px[ninc], py[ninc], pz[ninc], in GeV), 
+  1 time double (t[ninc], in ns)
 ```
+plus a few convenience variables like the mass of the incident particle.
   
 The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree. 
 
-If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree. I have so far tested this only when throwing single tracks from the gun.
+If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree. 
 
 ## running the code
 
@@ -59,17 +61,6 @@ npsim --runType batch \
 The command above throws the 50 GeV/c muons at phi = 358.45 degrees. This puts those muons at eta = 0 into the very middle of the face of "bar4". That is, the y position in the epic global coordinate system of the point where the 50 GeV muons enter the dirc bar plane is very close to -1.7cm (half the width of a dirc bar).
 
 Note the due to non-solenoidal components of the field, the tracks are not quite centered on the bar anymore as the pseudorapidity of the tracks move away from zero. The impact point moves a few mm away from the center of the bar at high-eta.
-
-And here's the command to throw the same 50 GeV/c muons at the same bar4, but now through the entire epic detector.
-```
-npsim --runType batch \
---action.step '{"name":"ddDIRCactionStep","parameter":{"OutputBase":"sim_epic_5k_bar4polarscan.incidence", "fileNumber":1, "DetailLevel":1}}' \
---compactFile $DETECTOR_PATH/epic.xml -G -N 5000 --gun.particle "mu+" \
---gun.momentumMin 50*GeV --gun.momentumMax 50*GeV --gun.phiMin 358.45*deg --gun.phiMax 358.45*deg \
---gun.thetaMin 30*deg --gun.thetaMax 140*deg --gun.distribution uniform --gun.position 0*cm,0*cm,0*cm \
---part.userParticleHandler='' --outputFile sim_epic_5k_bar4polarscan.edm4hep.root
-```
-
 
 
 
