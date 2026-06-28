@@ -35,7 +35,7 @@ Running the code will produce a root file containing the "incidence tree". This 
 ```
 plus perhaps some convenience variables like the mass of the incident particle.
   
-The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree. 
+The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). The bar ID field is needed to choose the proper LUT file for the PID reconstruction. In the future this will be estimated by finding the bar closest to the acts track state at the dirc "radius". 
 
 If no particles hit any dirc bar in a given event, that event number will be missing from the incidence tree. It's up to the user to match the incidence tree event numbers up with those in the "main" npsim output tree. Tracks in the main npsim output tree may not also appear in the incidence tree - only parentID=0 ("primary") particles that strike dirc bars are saved to the incidence tree. 
 
