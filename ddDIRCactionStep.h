@@ -69,7 +69,7 @@ namespace dd4hep {
 				//
 				DircIncidenceTree->Write();	// dirc incidence output ttree
  				if (DETAIL){
- 					//ht2->Divide(ht1);	// now ht2 is mean bar_vol ID vs (phi,theta)
+ 					//ht2->Divide(ht1);	
  					//ht1->Write();
  					//ht2->Write();
 					//ht3->Write();
@@ -121,6 +121,7 @@ namespace dd4hep {
 			DircIncidenceTree	= new TTree("DircIncidenceTree","tree with kinematics of particles hitting dirc");			
 				DircIncidenceTree->Branch("evt"    , &mDircIncidence_evt    ,           "evt/I");
 				DircIncidenceTree->Branch("ninc"   , &mDircIncidence_ninc   ,          "ninc/I");
+				DircIncidenceTree->Branch("box"    , mDircIncidence_box     ,     "box[ninc]/I");
 				DircIncidenceTree->Branch("bar"    , mDircIncidence_bar     ,     "bar[ninc]/I");
 				DircIncidenceTree->Branch("trackID", mDircIncidence_trackID , "trackID[ninc]/I");
 				DircIncidenceTree->Branch("pdgCode", mDircIncidence_pdgCode , "pdgCode[ninc]/I");
@@ -262,6 +263,7 @@ namespace dd4hep {
 						DircIncidence_mom		= track->GetMomentum();
 						DircIncidence_momdir	= track->GetMomentumDirection();
 						mDircIncidence_evt							= currentEventID;
+						mDircIncidence_box[iEntryIncCurrent]		= kBarBox;
 						mDircIncidence_bar[iEntryIncCurrent]		= kBar;
 						mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
 						mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
@@ -339,6 +341,7 @@ namespace dd4hep {
 		static const int MAXDircIncidence		= 100;
 		int    mDircIncidence_evt     			=   0; 
 		int    mDircIncidence_ninc				=   0;
+		inline static int    mDircIncidence_box[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_bar[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
 		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
