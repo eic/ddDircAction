@@ -26,14 +26,14 @@ Running the code will produce a root file containing the "incidence tree". This 
 ```
   event number (starting from zero),
   Number of bar-incident particles in this event ("ninc")
-  ID of struck bar bar[ninc],  (values range: [0,9])
-  G4 trackID[ninc], 
-  pdgCode[ninc],
-  3 position doubles (x[ninc], y[ninc], z[ninc], in mm),
-  3 momentum doubles (px[ninc], py[ninc], pz[ninc], in GeV), 
-  1 time double (t[ninc], in ns)
+  integer ID of struck bar: bar[ninc]  (values range: [0,9])
+  integer G4 track ID: trackID[ninc] 
+  integer PDG particle code: pdgCode[ninc]
+  3 position doubles: x[ninc], y[ninc], z[ninc]  (in mm)
+  3 momentum doubles: px[ninc], py[ninc], pz[ninc]  (in GeV)
+  1 time double: t[ninc]  (in ns)
 ```
-plus a few convenience variables like the mass of the incident particle.
+plus perhaps some convenience variables like the mass of the incident particle.
   
 The position and momentum information is that at the G4 step where the (truth) G4Track enters any dirc bar ("bar_vol_XX" in the geometry). In a later update i will add the ID of the struck bar also to this incidence tree. 
 
