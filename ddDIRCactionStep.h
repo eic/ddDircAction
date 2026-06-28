@@ -12,6 +12,8 @@
 #include "TFile.h"
 #include "TString.h"
 #include "TMath.h"
+#include "TVector3.h"
+#include <iomanip>
 
 // Namespace for the AIDA detector description toolkit
 namespace dd4hep {
@@ -36,14 +38,14 @@ namespace dd4hep {
 		//
 		//---- parameters for monitoring histograms
 		static const int MON_nev	= 20;
-		TH1D *hMON_thetaC_truth[MON_nev];	// filled for each of first MON_nev events...
+		//TH1D *hMON_thetaC_truth[MON_nev];	// filled for each of first MON_nev events...
 		//TH1D *hMON_OPtheta[MON_nev];		// filled for each of first MON_nev events...
-		TH2D *ht1;
-		TH2D *ht2;
-		TH2D *ht3;
-		TH2D *ht4;
-		TH2D *ht5;
-		TH2D *ht6;
+		//TH2D *ht1;
+		//TH2D *ht2;
+		//TH2D *ht3;
+		//TH2D *ht4;
+		//TH2D *ht5;
+		//TH2D *ht6;
 		//
 		//---------------------------------------------------------------------------------------------------- 
 		// Standard constructor with initializing arguments
@@ -66,18 +68,19 @@ namespace dd4hep {
 				steppingOutput->cd();		//---- dirc incidence output file
 				//
 				DircIncidenceTree->Write();	// dirc incidence output ttree
-// 				if (DETAIL){
-// 					ht1->Write();
-// 					ht2->Write();
-// 					ht3->Write();
-// 					ht4->Write();
-// 					ht5->Write();
-// 					ht6->Write();
-// 					for (int iev=0;iev<MON_nev;iev++){
-// 						hMON_thetaC_truth[iev]	->Write();
-// 						//hMON_OPtheta[iev]		->Write();
-// 					}
-// 				}
+ 				if (DETAIL){
+ 					//ht2->Divide(ht1);	// now ht2 is mean bar_vol ID vs (phi,theta)
+ 					//ht1->Write();
+ 					//ht2->Write();
+					//ht3->Write();
+					//ht4->Write();
+					//ht5->Write();
+					//ht6->Write();
+					//for (int iev=0;iev<MON_nev;iev++){
+					//	hMON_thetaC_truth[iev]	->Write();
+					//	//hMON_OPtheta[iev]		->Write();
+					//}
+ 				}	// end detail
 				//
  				steppingOutput->Close();
 				delete steppingOutput;
@@ -118,6 +121,7 @@ namespace dd4hep {
 			DircIncidenceTree	= new TTree("DircIncidenceTree","tree with kinematics of particles hitting dirc");			
 				DircIncidenceTree->Branch("evt"    , &mDircIncidence_evt    ,           "evt/I");
 				DircIncidenceTree->Branch("ninc"   , &mDircIncidence_ninc   ,          "ninc/I");
+				DircIncidenceTree->Branch("bar"    , mDircIncidence_bar     ,     "bar[ninc]/I");
 				DircIncidenceTree->Branch("trackID", mDircIncidence_trackID , "trackID[ninc]/I");
 				DircIncidenceTree->Branch("pdgCode", mDircIncidence_pdgCode , "pdgCode[ninc]/I");
 				DircIncidenceTree->Branch("x"      , mDircIncidence_x       ,       "x[ninc]/D");
@@ -131,20 +135,20 @@ namespace dd4hep {
 				DircIncidenceTree->Branch("beta"   , mDircIncidence_beta    ,    "beta[ninc]/D");	// convenience
 			//
 			if (DETAIL){
-				for (int iev=0;iev<MON_nev;iev++){
-					hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
-												   Form("truth #theta_{C1}, first primary, event %d",iev),
-												   1000,0,2000.);
-					//hMON_OPtheta[iev]		= new TH1D(Form("hMON_OPtheta_%d",iev),
-					//							   Form("truth #theta_{C2}, first primary, event %d",iev),
-					//							   1000,0,2000.);
-				}
-				ht1	= new TH2D("ht1","ht1",480,-1200,1200,480,-1200,1200);
-				ht2	= new TH2D("ht2","ht2",200,-M_PI,M_PI,200,-M_PI,M_PI);
-				ht3	= new TH2D("ht3","ht3",200,-M_PI,M_PI,200,-M_PI,M_PI);
-				ht4	= new TH2D("ht4","ht4",200,-M_PI,M_PI,200,-M_PI,M_PI);
-				ht5	= new TH2D("ht5","ht5",200,-M_PI,M_PI,200,-M_PI,M_PI);
-				ht6	= new TH2D("ht6","ht6",200,-M_PI,M_PI,200,-M_PI,M_PI);
+				//for (int iev=0;iev<MON_nev;iev++){
+				//	hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
+				//								   Form("truth #theta_{C1}, first primary, event %d",iev),
+				//								   1000,0,2000.);
+				//	//hMON_OPtheta[iev]		= new TH1D(Form("hMON_OPtheta_%d",iev),
+				//	//							   Form("truth #theta_{C2}, first primary, event %d",iev),
+				//	//							   1000,0,2000.);
+				//}
+				//ht1	= new TH2D("ht1","baridN vs (detphi,deteta)",126,-M_PI,M_PI,150,20*(M_PI/180.),170*(M_PI/180.));
+				//ht2	= new TH2D("ht2","barid  vs (detphi,deteta)",126,-M_PI,M_PI,150,20*(M_PI/180.),170*(M_PI/180.));
+				//ht3	= new TH2D("ht3","ht3",200,-M_PI,M_PI,200,-M_PI,M_PI);
+				//ht4	= new TH2D("ht4","ht4",200,-M_PI,M_PI,200,-M_PI,M_PI);
+				//ht5	= new TH2D("ht5","ht5",200,-M_PI,M_PI,200,-M_PI,M_PI);
+				//ht6	= new TH2D("ht6","ht6",200,-M_PI,M_PI,200,-M_PI,M_PI);
 			}	// end DETAIL
 			//
 			initialized = true;
@@ -192,7 +196,6 @@ namespace dd4hep {
 				DircIncidenceTree->Fill();
 				++nFill;
 				iEntryIncCurrent	=  0;
-//				trackIDprev			= -1;
 			}
 			//
 			G4Track* track	= step->GetTrack();
@@ -229,13 +232,6 @@ namespace dd4hep {
 				//DircIncidence_pos		= postStepLocation;
 				DircIncidence_pos		= track->GetPosition();
 				//
-				if (DETAIL && !VERBOSE && currentEventID<20){
-					std::cout<<"dirc incidence: "<<DircIncidence_pos.x()<<" "
-							 <<DircIncidence_pos.y()<<" "
-							 <<DircIncidence_pos.z()<<" "
-							 <<std::endl;
-				}
-				//
 				//double trackLen	= track->GetTrackLength();
 				double mass		= track->GetDefinition()->GetPDGMass() / CLHEP::GeV;
 				double charge	= track->GetDefinition()->GetPDGCharge()/eplus;
@@ -243,19 +239,30 @@ namespace dd4hep {
 				double etot		= sqrt(ptot*ptot + mass*mass);
 				double beta		= ptot/etot;
 				//
-				if (fabs(charge)>0. && mass>0. && beta>1./1.5){
+				if (fabs(charge)>0. && mass>0. && beta>1./1.4738){
 					//
 					if (iEntryIncCurrent < MAXDircIncidence){
 						//
-						int kstrindex	= postname.Index("bar_vol_");
-						TString barvol	= postname;
+						int kstrindex		= postname.Index("bar_vol_");
+						TString barvol		= postname;
 								barvol.Remove(0,kstrindex+8);
-						int		kbarvol	= atoi(barvol.Data());		//!!! SAVE TO TREE !!!
-						//std::cout<<postname<<"\t "<<kstrindex<<"\t "<<barvol<<" "<<kbarvol<<std::endl;
+						int		kbarvol	= atoi(barvol.Data());	// step->GetPostStepPoint()->GetTouchableHandle()->GetCopyNumber(0);
+						TVector3 DetPos		= TVector3(postStepLocation.x(),postStepLocation.y(),postStepLocation.z());
+						double DetPhi		= DetPos.Phi();
+						double dphi			= DetPhi + 15.*(M_PI/180.);
+						int    kBarBox		= -1;
+						if (dphi< 0.     ) dphi += 2.*M_PI;
+						if (dphi>=2.*M_PI) dphi -= 2.*M_PI;
+						kBarBox				= dphi/(2.*M_PI/12.);	
+						if (kBarBox<0||kBarBox>=12){ std::cout<<"error kBarBox"<<std::endl; exit(0); }			
+						int loop_counter	= (kbarvol - 1) / 2;	// placing glue layers increments the copy number!!!!
+						int kBar			= loop_counter / 4;		// y_index (0 to 9)
+						//int kSection		= loop_counter % 4;		// z_index (0 to 3)
 						//
 						DircIncidence_mom		= track->GetMomentum();
 						DircIncidence_momdir	= track->GetMomentumDirection();
 						mDircIncidence_evt							= currentEventID;
+						mDircIncidence_bar[iEntryIncCurrent]		= kBar;
 						mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
 						mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
 						mDircIncidence_x[iEntryIncCurrent]			= postStepLocation.x() / CLHEP::mm;			// mm
@@ -269,10 +276,32 @@ namespace dd4hep {
 						mDircIncidence_t[iEntryIncCurrent]			= track->GetGlobalTime() / CLHEP::ns;		// ns
 						mDircIncidence_mass[iEntryIncCurrent]		= mass;										// GeV
 						mDircIncidence_beta[iEntryIncCurrent]		= beta;										// GeV
+						//
+						// std::cout<<DetEta<<"\t "<<DetTheta<<" "<<DetPhi<<"\t barbox="<<kBarBox<<" kbarvol="<<kbarvol
+						// 	<<"\t bar_num="<<bar_num<<" section_num="<<section_num
+						// // 	<<"\t"<<touchable->GetVolume(0)->GetName()
+						// // 	<<" "<<touchable->GetVolume(1)->GetName()
+						// // 	<<" "<<touchable->GetVolume(2)->GetName()
+						// 	<<std::endl;
+						//ht1->Fill(DetPhi,DetTheta,1.0);
+						//ht2->Fill(DetPhi,DetTheta,(double)kbarvol);
+						//
+						//
+						if (DETAIL && !VERBOSE && currentEventID<20){
+							std::cout<<"evt: "<<std::setw(6)<<currentEventID
+									 <<"\t dirc incidence "<<std::setw(2)<<iEntryIncCurrent<<": "
+									 <<std::setw(10)<<DircIncidence_pos.x()<<" "
+									 <<std::setw(10)<<DircIncidence_pos.y()<<" "
+									 <<std::setw(10)<<DircIncidence_pos.z()
+									 <<"\t box= "<<kBarBox
+									 <<"\t bar= "<<kBar
+									 <<std::endl;
+						}
 						if (VERBOSE){
 							TString prevname2 = prevname; if (prevname2.Contains("AV_25!DIRC_0#0!")){ prevname2.ReplaceAll("AV_25!DIRC_0#0!",""); prevname2.ReplaceAll("#0",""); }
 							std::cout	<<"DIRC Incidence: evt="<<currentEventID<<" iFill="<<iEntryIncCurrent<<" trkID="<<trackID
 										<<" Volumes="<<prevname2.Data()<<"->"<<postname.Data()
+										<<" Box="<<kBarBox<<" Bar="<<kBar
 										//<<" step="<<stepNumber
 										<<" pdg="<<pdgCode
 										//<<" mass="<<mass
@@ -285,13 +314,12 @@ namespace dd4hep {
 						}
 						++iEntryIncCurrent;
 						currentEventIDprev	= currentEventID;
-//						trackIDprev			= trackID;
 					} else {
 						std::cout<<"Incidence tree overflow!!   ...increase MAXDircIncidence: "<<MAXDircIncidence<<std::endl;
 						exit(0);
 					}
 					//
-				}
+				}	//---- end charge,mass,beta check...
 				//
 			}	// end check: primary entering bar?
 			//
@@ -309,8 +337,9 @@ namespace dd4hep {
 		G4ThreeVector DircIncidence_momdir;
 		TString prevname="",postname="";
 		static const int MAXDircIncidence		= 100;
-		int    mDircIncidence_evt     			=  0 ; 
-		int    mDircIncidence_ninc				=  0 ;
+		int    mDircIncidence_evt     			=   0; 
+		int    mDircIncidence_ninc				=   0;
+		inline static int    mDircIncidence_bar[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
 		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
 		inline static double mDircIncidence_x[MAXDircIncidence]       = {0}; 
@@ -329,7 +358,6 @@ namespace dd4hep {
 		int nSeen	= 0;
 		int nFill	= 0;
 		int trackID;
-//		int trackIDprev;
 		//
 		bool VERBOSE	= false;
 		bool DETAIL		= false;
