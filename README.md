@@ -26,7 +26,8 @@ Running the code will produce a root file containing the "incidence tree". This 
 ```
   event number (starting from zero),
   Number of bar-incident particles in this event ("ninc")
-  G4 trackID number[ninc], 
+  ID of struck bar bar[ninc],  (values range: [0,9])
+  G4 trackID[ninc], 
   pdgCode[ninc],
   3 position doubles (x[ninc], y[ninc], z[ninc], in mm),
   3 momentum doubles (px[ninc], py[ninc], pz[ninc], in GeV), 
