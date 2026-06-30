@@ -38,6 +38,7 @@ namespace dd4hep {
 		//
 		//---- parameters for monitoring histograms
 		static const int MON_nev	= 20;
+		//TH3D*	hOPcr_zyx;
 		//TH1D *hMON_thetaC_truth[MON_nev];	// filled for each of first MON_nev events...
 		//TH1D *hMON_OPtheta[MON_nev];		// filled for each of first MON_nev events...
 		//TH2D *ht1;
@@ -57,6 +58,9 @@ namespace dd4hep {
 			//
 			std::cout<<"ddDIRCactionStep -- mDetailLevel = "<<mDetailLevel<<std::endl;
 			//
+			Zbarsend	= -2729.075*mm;		// mm	!!!!!!!!!TEMPORARY!!!!!!!!! 
+			std::cout<<"ddDIRCactionStep -- Killing OPs created with Z < "<<Zbarsend<<std::endl;
+			//
 		};	//---- end ctor
 		//
 		//---------------------------------------------------------------------------------------------------- 
@@ -69,6 +73,7 @@ namespace dd4hep {
 				//
 				DircIncidenceTree->Write();	// dirc incidence output ttree
  				if (DETAIL){
+ 					//hOPcr_zyx->Write();
  					//ht2->Divide(ht1);	
  					//ht1->Write();
  					//ht2->Write();
@@ -136,6 +141,9 @@ namespace dd4hep {
 				DircIncidenceTree->Branch("beta"   , mDircIncidence_beta    ,    "beta[ninc]/D");	// convenience
 			//
 			if (DETAIL){
+				//
+				//hOPcr_zyx	= new TH3D("hOPcr_zyx","hOPcr_zyx",400,-1000,1000,400,-1000,1000,104,-3200,2000);
+				//
 				//for (int iev=0;iev<MON_nev;iev++){
 				//	hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
 				//								   Form("truth #theta_{C1}, first primary, event %d",iev),
@@ -325,6 +333,19 @@ namespace dd4hep {
 				//
 			}	// end check: primary entering bar?
 			//
+			//
+			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
+				auto thisStepPoint	= step->GetPreStepPoint();
+				G4ThreeVector OPpos	= thisStepPoint->GetPosition();
+				double OPcr_z		= OPpos.z();
+				if (OPcr_z < Zbarsend){
+					track->SetTrackStatus(fStopAndKill);
+				}
+				//double OPcr_x	= OPpos.x();
+				//double OPcr_y	= OPpos.y();
+				//hOPcr_zyx		->Fill(OPcr_x,OPcr_y,OPcr_z);
+			}
+
 			//---> commented code block at end of file below went HERE <---			
 			//
 		}	// end operator function
@@ -333,6 +354,8 @@ namespace dd4hep {
 		bool initialized = false;
 		//
 		G4EventManager* eventManager;
+		//
+		double Zbarsend;
 		//
 		G4ThreeVector DircIncidence_pos;
 		G4ThreeVector DircIncidence_mom;
