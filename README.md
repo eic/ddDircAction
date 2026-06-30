@@ -1,5 +1,8 @@
 # ddDircAction
-determine position and direction of primary particles incident on dirc bars, and save this info to a tree
+Determine position and direction of primary particles incident on dirc bars, and save this info to a tree.
+It is a stepping action, so it is also useful for saving information related to OP creation and other processes
+occurring in geant4 navigation. The code also kills OPs created in the prism/lenses, as a temporary workaround
+while we wait for npsim PR 75 (https://github.com/eic/npsim/pull/75). 
 
 ## get and build code
 ```
@@ -18,7 +21,7 @@ cd ..
 
 Next you need to add the created libraries to the path! (i have the next command in a "mysetup" script that i source just after starting eic-shell):
 ```
-export LD_LIBRARY_PATH=/Users/sp/eic/ddDircAction/install/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/Users/wjllope/eic/ddDircAction/install/lib:${LD_LIBRARY_PATH}
 ```
 and you need to change the parts of this path that are in front of eic/ddDircAction/install/lib .
 
