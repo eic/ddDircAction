@@ -2,7 +2,7 @@
 Determine position and direction of primary particles incident on dirc bars, and save this info to a tree.
 It is a stepping action, so it is also useful for saving information related to OP creation and other processes
 occurring in geant4 navigation. The code also kills OPs created in the prism/lenses, as a temporary workaround
-while we wait for npsim PR 75 (https://github.com/eic/npsim/pull/75). 
+while we wait for https://github.com/eic/npsim/pull/75 
 
 ## get and build code
 ```
