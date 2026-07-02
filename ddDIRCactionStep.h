@@ -38,7 +38,8 @@ namespace dd4hep {
 		//
 		//---- parameters for monitoring histograms
 		static const int MON_nev	= 20;
-		//TH3D*	hOPcr_zyx;
+		TH2D*	hOPcr_yx;
+		TH1D*	hOPcr_z;
 		//TH1D *hMON_thetaC_truth[MON_nev];	// filled for each of first MON_nev events...
 		//TH1D *hMON_OPtheta[MON_nev];		// filled for each of first MON_nev events...
 		//TH2D *ht1;
@@ -73,7 +74,8 @@ namespace dd4hep {
 				//
 				DircIncidenceTree->Write();	// dirc incidence output ttree
  				if (DETAIL){
- 					//hOPcr_zyx->Write();
+ 					hOPcr_yx->Write();
+ 					hOPcr_z->Write();
  					//ht2->Divide(ht1);	
  					//ht1->Write();
  					//ht2->Write();
@@ -142,7 +144,8 @@ namespace dd4hep {
 			//
 			if (DETAIL){
 				//
-				//hOPcr_zyx	= new TH3D("hOPcr_zyx","hOPcr_zyx",400,-1000,1000,400,-1000,1000,104,-3200,2000);
+				hOPcr_yx	= new TH2D("hOPcr_yx","hOPcr_yx",500,-1000,1000,500,-1000,1000);
+				hOPcr_z		= new TH1D("hOPcr_z" ,"hOPcr_z" ,416,-3200,2000);
 				//
 				//for (int iev=0;iev<MON_nev;iev++){
 				//	hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
@@ -337,13 +340,14 @@ namespace dd4hep {
 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
 				auto thisStepPoint	= step->GetPreStepPoint();
 				G4ThreeVector OPpos	= thisStepPoint->GetPosition();
-				double OPcr_z		= OPpos.z();
+				double OPcr_x	= OPpos.x();
+				double OPcr_y	= OPpos.y();
+				double OPcr_z	= OPpos.z();
+				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
+				hOPcr_z			->Fill(OPcr_z);
 				if (OPcr_z < Zbarsend){
 					track->SetTrackStatus(fStopAndKill);
 				}
-				//double OPcr_x	= OPpos.x();
-				//double OPcr_y	= OPpos.y();
-				//hOPcr_zyx		->Fill(OPcr_x,OPcr_y,OPcr_z);
 			}
 
 			//---> commented code block at end of file below went HERE <---			
