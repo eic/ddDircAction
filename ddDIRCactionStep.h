@@ -145,7 +145,7 @@ namespace dd4hep {
 			if (DETAIL){
 				//
 				hOPcr_yx	= new TH2D("hOPcr_yx","hOPcr_yx",500,-1000,1000,500,-1000,1000);
-				hOPcr_z		= new TH1D("hOPcr_z" ,"hOPcr_z" ,416,-3200,2000);
+				hOPcr_z		= new TH1D("hOPcr_z" ,"hOPcr_z" ,540,-3300,2100);
 				//
 				//for (int iev=0;iev<MON_nev;iev++){
 				//	hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
