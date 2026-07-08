@@ -499,9 +499,9 @@ namespace dd4hep {
 		G4ThreeVector DircIncidence_mom;
 		G4ThreeVector DircIncidence_momdir;
 		TString prevname="",postname="";
-		static const int MAXDircIncidence		= 100;
-		int    mDircIncidence_evt     			=   0; 
-		int    mDircIncidence_ninc				=   0;
+		static const int MAXDircIncidence		= 1000;
+		int    mDircIncidence_evt     			=    0; 
+		int    mDircIncidence_ninc				=    0;
 		inline static int    mDircIncidence_box[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_bar[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
