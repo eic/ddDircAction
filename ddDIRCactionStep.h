@@ -1,6 +1,7 @@
 #ifndef DDDIRCACTIONSTEP_H
 #define DDDIRCACTIONSTEP_H
 
+#include "G4OpBoundaryProcess.hh"
 #include "G4EventManager.hh"
 #include "G4SteppingManager.hh"
 #include "DDG4/Geant4SteppingAction.h"
@@ -14,6 +15,9 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include <iomanip>
+
+using std::cout;
+using std::endl;
 
 // Namespace for the AIDA detector description toolkit
 namespace dd4hep {
@@ -37,9 +41,20 @@ namespace dd4hep {
 		TTree*	DircIncidenceTree;
 		//
 		//---- parameters for monitoring histograms
-		static const int MON_nev	= 20;
 		TH2D*	hOPcr_yx;
+		TH2D*	hOPcr_rz;
 		TH1D*	hOPcr_z;
+		TH2D*	hOPvtx_yx;		// creation point of OPs that enter bars from the outside!
+		TH2D*	hOPvtx_rz;		// creation point of OPs that enter bars from the outside!
+		TH1D*	hOPvtx_z;		// creation point of OPs that enter bars from the outside!
+		TH2D*	hOPair_yx;		// positions of steps of OPs outside bars...
+		TH2D*	hOPair_rz;		// positions of steps of OPs outside bars...
+		TH1D*	hOPair_z;		// positions of steps of OPs outside bars...
+		TH2D*	hOPenter_yx;	// positions of steps of where OPs ENTER bars...
+		TH2D*	hOPenter_rz;	// positions of steps of where OPs ENTER bars...
+		TH1D*	hOPenter_z;		// positions of steps of where OPs ENTER bars...
+		//
+		//static const int MON_nev	= 20;
 		//TH1D *hMON_thetaC_truth[MON_nev];	// filled for each of first MON_nev events...
 		//TH1D *hMON_OPtheta[MON_nev];		// filled for each of first MON_nev events...
 		//TH2D *ht1;
@@ -75,7 +90,18 @@ namespace dd4hep {
 				DircIncidenceTree->Write();	// dirc incidence output ttree
  				if (DETAIL){
  					hOPcr_yx->Write();
+ 					hOPcr_rz->Write();
  					hOPcr_z->Write();
+ 					hOPvtx_yx->Write();
+ 					hOPvtx_rz->Write();
+ 					hOPvtx_z->Write();
+ 					hOPair_yx->Write();
+ 					hOPair_rz->Write();
+ 					hOPair_z->Write();
+ 					hOPenter_yx->Write();
+ 					hOPenter_rz->Write();
+ 					hOPenter_z->Write();
+ 					//
  					//ht2->Divide(ht1);	
  					//ht1->Write();
  					//ht2->Write();
@@ -132,6 +158,7 @@ namespace dd4hep {
 				DircIncidenceTree->Branch("bar"    , mDircIncidence_bar     ,     "bar[ninc]/I");
 				DircIncidenceTree->Branch("trackID", mDircIncidence_trackID , "trackID[ninc]/I");
 				DircIncidenceTree->Branch("pdgCode", mDircIncidence_pdgCode , "pdgCode[ninc]/I");
+				DircIncidenceTree->Branch("primary", mDircIncidence_primary , "primary[ninc]/I");				
 				DircIncidenceTree->Branch("x"      , mDircIncidence_x       ,       "x[ninc]/D");
 				DircIncidenceTree->Branch("y"      , mDircIncidence_y       ,       "y[ninc]/D");
 				DircIncidenceTree->Branch("z"      , mDircIncidence_z       ,       "z[ninc]/D");
@@ -144,8 +171,18 @@ namespace dd4hep {
 			//
 			if (DETAIL){
 				//
-				hOPcr_yx	= new TH2D("hOPcr_yx","hOPcr_yx",500,-1000,1000,500,-1000,1000);
-				hOPcr_z		= new TH1D("hOPcr_z" ,"hOPcr_z" ,540,-3300,2100);
+				hOPcr_yx	= new TH2D("hOPcr_yx" ,"hOPcr_yx" ,500,-1000,1000,500,-1000,1000);
+				hOPcr_rz	= new TH2D("hOPcr_rz" ,"hOPcr_rz" ,660,-3300,3300,500,    0,1000);
+				hOPcr_z		= new TH1D("hOPcr_z"  ,"hOPcr_z"  ,660,-3300,3300);
+				hOPvtx_yx	= new TH2D("hOPvtx_yx","hOPvtx_yx",500,-1000,1000,500,-1000,1000);
+				hOPvtx_rz	= new TH2D("hOPvtx_rz","hOPvtx_rz",660,-3300,3300,500,    0,1000);
+				hOPvtx_z	= new TH1D("hOPvtx_z" ,"hOPvtx_z" ,660,-3300,3300);
+				hOPair_yx	= new TH2D("hOPair_yx","hOPair_yx",500,-1000,1000,500,-1000,1000);
+				hOPair_rz	= new TH2D("hOPair_rz","hOPair_rz",660,-3300,3300,500,    0,1000);
+				hOPair_z	= new TH1D("hOPair_z" ,"hOPair_z" ,660,-3300,3300);
+				hOPenter_yx	= new TH2D("hOPenter_yx","hOPenter_yx",500,-1000,1000,500,-1000,1000);
+				hOPenter_rz	= new TH2D("hOPenter_rz","hOPenter_rz",660,-3300,3300,500,    0,1000);
+				hOPenter_z	= new TH1D("hOPenter_z" ,"hOPenter_z" ,660,-3300,3300);
 				//
 				//for (int iev=0;iev<MON_nev;iev++){
 				//	hMON_thetaC_truth[iev]	= new TH1D(Form("hMON_thetaC_truth_%d",iev),
@@ -193,7 +230,7 @@ namespace dd4hep {
 		//---------------------------------------------------------------------------------------------------- 
 		//---- Pre-track action callback
 		//
-		virtual void operator()(const G4Step* step, G4SteppingManager* mgr) override {
+		virtual void operator()(const G4Step* step, G4SteppingManager* /*mgr*/) override {
       		//
 			if(!initialized){initializeOutputFile();}
 			//
@@ -235,7 +272,46 @@ namespace dd4hep {
 // 				return;
 // 			}
 			//
-			if (parentID==0 && stepStatus==1 	// parentID==0 taken to indicate PRIMARY GENERATED particle
+			if ( pdgCode==-22 						// opticalphoton...
+			 && !prevname.Contains("bar_vol") 		// prev volume is not a bar
+			 && !postname.Contains("bar_vol") 		// post volume is not a bar
+			 && !prevname.Contains("trap_vol") 		// prev volume is not a prism
+			 && !postname.Contains("trap_vol") 		// post volume is not a prism
+			   ){ 									// either volume is not a bar or prism
+ 				hOPair_yx	->Fill(stepLocation.x(),stepLocation.y());
+ 				hOPair_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
+ 				hOPair_z	->Fill(stepLocation.z());
+//				track->SetTrackStatus(fStopAndKill);
+//				return;
+			}
+			//
+			//
+			//---- are OPs entering bars from the outside????
+// 			if (pdgCode==-22 								// opticalphoton...
+// 			 && postname.Contains("bar_vol") 				// ...enters the bar...
+// 			 && prevname.Contains("Envelope_box_vol")){ 	// ...from outside the bar.
+// 				//std::cout<<"sneakyOP from "<<prevname<<"\t"<<trackID<<" "<<parentID<<" "<<stepNumber<<" "<<stepStatus
+// 				//	<<"\t pos: "<<stepLocation.x()<<" "<<stepLocation.y()<<" "<<stepLocation.z()
+// 				//	<<std::endl;
+// 				//
+// 				G4ThreeVector vertexPos = track->GetVertexPosition();
+// 				hOPvtx_yx	->Fill(vertexPos.x(),vertexPos.y());
+// 				hOPvtx_rz	->Fill(vertexPos.z(),sqrt(vertexPos.x()*vertexPos.x() + vertexPos.y()*vertexPos.y()));
+// 				hOPvtx_z	->Fill(vertexPos.z());
+// 				//
+// 				//track->SetTrackStatus(fStopAndKill);
+// 				//return;
+// 			}
+// 			if (pdgCode==-22 								// opticalphoton...
+// 			 && postname.Contains("Envelope_box_vol")){ 	// ...is outside the bar:
+// 				track->SetTrackStatus(fStopAndKill);		// ...so kill it,
+// 				return;										// ...and leave.
+// 			}
+			//
+			//
+//			if (parentID==0 && stepStatus==1 	// parentID==0 taken to indicate PRIMARY GENERATED particle
+			//
+			if (stepStatus==1 					//
 			 &&  postname.Contains("bar_vol") 	// enters bar_vol...
 			 && !prevname.Contains("bar_vol") 	// ...from some other volume (but not glue_vol)
 			 && !prevname.Contains("glue_vol") 	// crossing glue layers only happens INSIDE bars, so not a new incidence!!!
@@ -251,7 +327,10 @@ namespace dd4hep {
 				double etot		= sqrt(ptot*ptot + mass*mass);
 				double beta		= ptot/etot;
 				//
+				//
 				if (fabs(charge)>0. && mass>0. && beta>1./1.4738){
+					//
+					//std::cout<<pdgCode<<" "<<trackID<<" "<<parentID<<std::endl;
 					//
 					if (iEntryIncCurrent < MAXDircIncidence){
 						//
@@ -269,6 +348,8 @@ namespace dd4hep {
 						if (kBarBox<0||kBarBox>=12){ std::cout<<"error kBarBox"<<std::endl; exit(0); }			
 						int loop_counter	= (kbarvol - 1) / 2;	// placing glue layers increments the copy number!!!!
 						int kBar			= loop_counter / 4;		// y_index (0 to 9)
+						int kPrimary		= -1;					// =0 if secondary, =1 if evgen
+						if (parentID==0){ kPrimary=1; }else{ kPrimary=0; }
 						//int kSection		= loop_counter % 4;		// z_index (0 to 3)
 						//
 						DircIncidence_mom		= track->GetMomentum();
@@ -278,6 +359,7 @@ namespace dd4hep {
 						mDircIncidence_bar[iEntryIncCurrent]		= kBar;
 						mDircIncidence_trackID[iEntryIncCurrent]	= trackID;
 						mDircIncidence_pdgCode[iEntryIncCurrent]	= pdgCode;
+						mDircIncidence_primary[iEntryIncCurrent]	= kPrimary;		// 1 if evgen, 0 if secondary
 						mDircIncidence_x[iEntryIncCurrent]			= postStepLocation.x() / CLHEP::mm;			// mm
 						mDircIncidence_y[iEntryIncCurrent]			= postStepLocation.y() / CLHEP::mm;			// mm
 						mDircIncidence_z[iEntryIncCurrent]			= postStepLocation.z() / CLHEP::mm;			// mm
@@ -338,19 +420,71 @@ namespace dd4hep {
 			//
 			//
 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
-				auto thisStepPoint	= step->GetPreStepPoint();
-				G4ThreeVector OPpos	= thisStepPoint->GetPosition();
+				auto  thisPreStepPoint	=  step->GetPreStepPoint();
+				TString  PreVolName		=  thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
+				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
 				double OPcr_x	= OPpos.x();
 				double OPcr_y	= OPpos.y();
 				double OPcr_z	= OPpos.z();
 				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
+				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
 				hOPcr_z			->Fill(OPcr_z);
+				//
+				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
+				//
 				if (OPcr_z < Zbarsend){
 					track->SetTrackStatus(fStopAndKill);
+					return;
+				}
+				//
+			}
+			//
+			//---- let's see if OPs enter bars from outside...
+			//
+			// Check if it's an optical photon on a geometry boundary
+			if (pdgCode == -22 &&
+				step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
+				//
+				// Ensure it started OUTSIDE the bar, but the target destination is INSIDE the bar
+				//		and do not flag the OP if the previous volume was "glue_vol" because that's o.k.!
+				G4VPhysicalVolume* preVol  = step->GetPreStepPoint()->GetPhysicalVolume();
+				G4VPhysicalVolume* postVol = step->GetPostStepPoint()->GetPhysicalVolume();
+				if (preVol && postVol &&
+					 preVol->GetName().find("bar_vol") == std::string::npos &&		// preVol does NOT contain "bar_vol"
+					postVol->GetName().find("bar_vol") != std::string::npos && 		// postVol contains "bar_vol"
+					 preVol->GetName().find("glue_vol")== std::string::npos ) {		// enter bar from glue OK!!!
+					// Find the active OpBoundary process instance
+					G4ProcessManager* pm = track->GetDefinition()->GetProcessManager();
+					G4ProcessVector* pv  = pm->GetPostStepProcessVector();
+					G4OpBoundaryProcess* boundary = nullptr;
+					for (std::size_t i=0; i<pv->entries(); ++i) {
+						if ((*pv)[i]->GetProcessName() == "OpBoundary") {
+							boundary = static_cast<G4OpBoundaryProcess*>((*pv)[i]);
+							break;
+						}
+					}
+					// Verify it entered via refraction or basic transmission
+					if (boundary) {
+						G4OpBoundaryProcessStatus status = boundary->GetStatus();
+						if (status == G4OpBoundaryProcessStatus::FresnelRefraction || 
+							status == G4OpBoundaryProcessStatus::Transmission) {
+							//std::cout<<"ok seriously \t "<<preVol->GetName()<<" \t "<<postVol->GetName()<<std::endl;
+							hOPenter_yx	->Fill(stepLocation.x(),stepLocation.y());
+							hOPenter_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
+							hOPenter_z	->Fill(stepLocation.z());
+							G4ThreeVector vertexPos = track->GetVertexPosition();
+							hOPvtx_yx	->Fill(vertexPos.x(),vertexPos.y());
+							hOPvtx_rz	->Fill(vertexPos.z(),sqrt(vertexPos.x()*vertexPos.x() + vertexPos.y()*vertexPos.y()));
+							hOPvtx_z	->Fill(vertexPos.z());
+							//
+//!!							track->SetTrackStatus(fStopAndKill);
+//!!							return;
+							//
+						}
+					}
 				}
 			}
-
-			//---> commented code block at end of file below went HERE <---			
+			//
 			//
 		}	// end operator function
  
@@ -372,6 +506,7 @@ namespace dd4hep {
 		inline static int    mDircIncidence_bar[MAXDircIncidence]     = {0}; 
 		inline static int    mDircIncidence_trackID[MAXDircIncidence] = {0}; 
 		inline static int    mDircIncidence_pdgCode[MAXDircIncidence] = {0}; 
+		inline static int    mDircIncidence_primary[MAXDircIncidence] = {0}; 
 		inline static double mDircIncidence_x[MAXDircIncidence]       = {0}; 
 		inline static double mDircIncidence_y[MAXDircIncidence]       = {0}; 
 		inline static double mDircIncidence_z[MAXDircIncidence]       = {0}; 
