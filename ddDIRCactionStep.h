@@ -47,9 +47,9 @@ namespace dd4hep {
 		TH2D*	hOPvtx_yx;		// creation point of OPs that enter bars from the outside!
 		TH2D*	hOPvtx_rz;		// creation point of OPs that enter bars from the outside!
 		TH1D*	hOPvtx_z;		// creation point of OPs that enter bars from the outside!
-		TH2D*	hOPair_yx;		// positions of steps of OPs outside bars...
-		TH2D*	hOPair_rz;		// positions of steps of OPs outside bars...
-		TH1D*	hOPair_z;		// positions of steps of OPs outside bars...
+		TH2D*	hOPnotdirc_yx;		// positions of steps of OPs outside bars...
+		TH2D*	hOPnotdirc_rz;		// positions of steps of OPs outside bars...
+		TH1D*	hOPnotdirc_z;		// positions of steps of OPs outside bars...
 		TH2D*	hOPenter_yx;	// positions of steps of where OPs ENTER bars...
 		TH2D*	hOPenter_rz;	// positions of steps of where OPs ENTER bars...
 		TH1D*	hOPenter_z;		// positions of steps of where OPs ENTER bars...
@@ -95,9 +95,9 @@ namespace dd4hep {
  					hOPvtx_yx->Write();
  					hOPvtx_rz->Write();
  					hOPvtx_z->Write();
- 					hOPair_yx->Write();
- 					hOPair_rz->Write();
- 					hOPair_z->Write();
+ 					hOPnotdirc_yx->Write();
+ 					hOPnotdirc_rz->Write();
+ 					hOPnotdirc_z->Write();
  					hOPenter_yx->Write();
  					hOPenter_rz->Write();
  					hOPenter_z->Write();
@@ -177,9 +177,9 @@ namespace dd4hep {
 				hOPvtx_yx	= new TH2D("hOPvtx_yx","hOPvtx_yx",500,-1000,1000,500,-1000,1000);
 				hOPvtx_rz	= new TH2D("hOPvtx_rz","hOPvtx_rz",660,-3300,3300,500,    0,1000);
 				hOPvtx_z	= new TH1D("hOPvtx_z" ,"hOPvtx_z" ,660,-3300,3300);
-				hOPair_yx	= new TH2D("hOPair_yx","hOPair_yx",500,-1000,1000,500,-1000,1000);
-				hOPair_rz	= new TH2D("hOPair_rz","hOPair_rz",660,-3300,3300,500,    0,1000);
-				hOPair_z	= new TH1D("hOPair_z" ,"hOPair_z" ,660,-3300,3300);
+				hOPnotdirc_yx	= new TH2D("hOPnotdirc_yx","hOPnotdirc_yx",500,-1000,1000,500,-1000,1000);
+				hOPnotdirc_rz	= new TH2D("hOPnotdirc_rz","hOPnotdirc_rz",660,-3300,3300,500,    0,1000);
+				hOPnotdirc_z	= new TH1D("hOPnotdirc_z" ,"hOPnotdirc_z" ,660,-3300,3300);
 				hOPenter_yx	= new TH2D("hOPenter_yx","hOPenter_yx",500,-1000,1000,500,-1000,1000);
 				hOPenter_rz	= new TH2D("hOPenter_rz","hOPenter_rz",660,-3300,3300,500,    0,1000);
 				hOPenter_z	= new TH1D("hOPenter_z" ,"hOPenter_z" ,660,-3300,3300);
@@ -272,18 +272,20 @@ namespace dd4hep {
 // 				return;
 // 			}
 			//
-			if ( pdgCode==-22 						// opticalphoton...
-			 && !prevname.Contains("bar_vol") 		// prev volume is not a bar
-			 && !postname.Contains("bar_vol") 		// post volume is not a bar
-			 && !prevname.Contains("trap_vol") 		// prev volume is not a prism
-			 && !postname.Contains("trap_vol") 		// post volume is not a prism
-			   ){ 									// either volume is not a bar or prism
- 				hOPair_yx	->Fill(stepLocation.x(),stepLocation.y());
- 				hOPair_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
- 				hOPair_z	->Fill(stepLocation.z());
-//				track->SetTrackStatus(fStopAndKill);
-//				return;
-			}
+// 			if ( pdgCode==-22 						// opticalphoton...
+// 			 && !prevname.Contains("bar_vol") 		// prev volume is not a bar
+// 			 && !postname.Contains("bar_vol") 		// post volume is not a bar
+// 			 && !prevname.Contains("prism_vol") 	// prev volume is not a prism
+// 			 && !postname.Contains("prism_vol") 	// post volume is not a prism
+// 			 && !prevname.Contains("lens_vol") 		// prev volume is not a lens
+// 			 && !postname.Contains("lens_vol") 		// post volume is not a lens
+// 			   ){ 									// either volume is not a bar or prism
+//				hOPnotdirc_yx	->Fill(stepLocation.x(),stepLocation.y());
+//				hOPnotdirc_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
+//				hOPnotdirc_z	->Fill(stepLocation.z());
+//				//track->SetTrackStatus(fStopAndKill);
+//				//return;
+// 			}
 			//
 			//
 			//---- are OPs entering bars from the outside????
@@ -327,7 +329,6 @@ namespace dd4hep {
 				double etot		= sqrt(ptot*ptot + mass*mass);
 				double beta		= ptot/etot;
 				//
-				//
 				if (fabs(charge)>0. && mass>0. && beta>1./1.4738){
 					//
 					//std::cout<<pdgCode<<" "<<trackID<<" "<<parentID<<std::endl;
@@ -348,7 +349,7 @@ namespace dd4hep {
 						if (kBarBox<0||kBarBox>=12){ std::cout<<"error kBarBox"<<std::endl; exit(0); }			
 						int loop_counter	= (kbarvol - 1) / 2;	// placing glue layers increments the copy number!!!!
 						int kBar			= loop_counter / 4;		// y_index (0 to 9)
-						int kPrimary		= -1;					// =0 if secondary, =1 if evgen
+						int kPrimary;								// =0 if secondary, =1 if evgen
 						if (parentID==0){ kPrimary=1; }else{ kPrimary=0; }
 						//int kSection		= loop_counter % 4;		// z_index (0 to 3)
 						//
@@ -382,7 +383,7 @@ namespace dd4hep {
 						//ht2->Fill(DetPhi,DetTheta,(double)kbarvol);
 						//
 						//
-						if (DETAIL && !VERBOSE && currentEventID<20){
+						if (DETAIL && !VERBOSE && currentEventID<20 && kPrimary){
 							std::cout<<"evt: "<<std::setw(6)<<currentEventID
 									 <<"\t dirc incidence "<<std::setw(2)<<iEntryIncCurrent<<": "
 									 <<std::setw(10)<<DircIncidence_pos.x()<<" "
@@ -419,71 +420,71 @@ namespace dd4hep {
 			}	// end check: primary entering bar?
 			//
 			//
-			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
-				auto  thisPreStepPoint	=  step->GetPreStepPoint();
-				TString  PreVolName		=  thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
-				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
-				double OPcr_x	= OPpos.x();
-				double OPcr_y	= OPpos.y();
-				double OPcr_z	= OPpos.z();
-				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
-				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
-				hOPcr_z			->Fill(OPcr_z);
-				//
-				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
-				//
-				if (OPcr_z < Zbarsend){
-					track->SetTrackStatus(fStopAndKill);
-					return;
-				}
-				//
-			}
+// 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
+// 				auto  thisPreStepPoint	=  step->GetPreStepPoint();
+// 				TString  PreVolName		=  thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
+// 				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
+// 				double OPcr_x	= OPpos.x();
+// 				double OPcr_y	= OPpos.y();
+// 				double OPcr_z	= OPpos.z();
+// 				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
+// 				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
+// 				hOPcr_z			->Fill(OPcr_z);
+// 				//
+// 				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
+// 				//
+// 				if (OPcr_z < Zbarsend){
+// 					track->SetTrackStatus(fStopAndKill);
+// 					return;
+// 				}
+// 				//
+// 			}
 			//
 			//---- let's see if OPs enter bars from outside...
 			//
 			// Check if it's an optical photon on a geometry boundary
-			if (pdgCode == -22 &&
-				step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
-				//
-				// Ensure it started OUTSIDE the bar, but the target destination is INSIDE the bar
-				//		and do not flag the OP if the previous volume was "glue_vol" because that's o.k.!
-				G4VPhysicalVolume* preVol  = step->GetPreStepPoint()->GetPhysicalVolume();
-				G4VPhysicalVolume* postVol = step->GetPostStepPoint()->GetPhysicalVolume();
-				if (preVol && postVol &&
-					 preVol->GetName().find("bar_vol") == std::string::npos &&		// preVol does NOT contain "bar_vol"
-					postVol->GetName().find("bar_vol") != std::string::npos && 		// postVol contains "bar_vol"
-					 preVol->GetName().find("glue_vol")== std::string::npos ) {		// enter bar from glue OK!!!
-					// Find the active OpBoundary process instance
-					G4ProcessManager* pm = track->GetDefinition()->GetProcessManager();
-					G4ProcessVector* pv  = pm->GetPostStepProcessVector();
-					G4OpBoundaryProcess* boundary = nullptr;
-					for (std::size_t i=0; i<pv->entries(); ++i) {
-						if ((*pv)[i]->GetProcessName() == "OpBoundary") {
-							boundary = static_cast<G4OpBoundaryProcess*>((*pv)[i]);
-							break;
-						}
-					}
-					// Verify it entered via refraction or basic transmission
-					if (boundary) {
-						G4OpBoundaryProcessStatus status = boundary->GetStatus();
-						if (status == G4OpBoundaryProcessStatus::FresnelRefraction || 
-							status == G4OpBoundaryProcessStatus::Transmission) {
-							//std::cout<<"ok seriously \t "<<preVol->GetName()<<" \t "<<postVol->GetName()<<std::endl;
-							hOPenter_yx	->Fill(stepLocation.x(),stepLocation.y());
-							hOPenter_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
-							hOPenter_z	->Fill(stepLocation.z());
-							G4ThreeVector vertexPos = track->GetVertexPosition();
-							hOPvtx_yx	->Fill(vertexPos.x(),vertexPos.y());
-							hOPvtx_rz	->Fill(vertexPos.z(),sqrt(vertexPos.x()*vertexPos.x() + vertexPos.y()*vertexPos.y()));
-							hOPvtx_z	->Fill(vertexPos.z());
-							//
-//!!							track->SetTrackStatus(fStopAndKill);
-//!!							return;
-							//
-						}
-					}
-				}
-			}
+// 			if (pdgCode == -22 &&
+// 				step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
+// 				//
+// 				// Ensure it started OUTSIDE the bar, but the target destination is INSIDE the bar
+// 				//		and do not flag the OP if the previous volume was "glue_vol" because that's o.k.!
+// 				G4VPhysicalVolume* preVol  = step->GetPreStepPoint()->GetPhysicalVolume();
+// 				G4VPhysicalVolume* postVol = step->GetPostStepPoint()->GetPhysicalVolume();
+// 				if (preVol && postVol &&
+// 					 preVol->GetName().find("bar_vol") == std::string::npos &&		// preVol does NOT contain "bar_vol"
+// 					postVol->GetName().find("bar_vol") != std::string::npos && 		// postVol contains "bar_vol"
+// 					 preVol->GetName().find("glue_vol")== std::string::npos ) {		// enter bar from glue OK!!!
+// 					// Find the active OpBoundary process instance
+// 					G4ProcessManager* pm = track->GetDefinition()->GetProcessManager();
+// 					G4ProcessVector* pv  = pm->GetPostStepProcessVector();
+// 					G4OpBoundaryProcess* boundary = nullptr;
+// 					for (std::size_t i=0; i<pv->entries(); ++i) {
+// 						if ((*pv)[i]->GetProcessName() == "OpBoundary") {
+// 							boundary = static_cast<G4OpBoundaryProcess*>((*pv)[i]);
+// 							break;
+// 						}
+// 					}
+// 					// Verify it entered via refraction or basic transmission
+// 					if (boundary) {
+// 						G4OpBoundaryProcessStatus status = boundary->GetStatus();
+// 						if (status == G4OpBoundaryProcessStatus::FresnelRefraction || 
+// 							status == G4OpBoundaryProcessStatus::Transmission) {
+// 							//std::cout<<"ok seriously \t "<<preVol->GetName()<<" \t "<<postVol->GetName()<<std::endl;
+// 							hOPenter_yx	->Fill(stepLocation.x(),stepLocation.y());
+// 							hOPenter_rz	->Fill(stepLocation.z(),sqrt(stepLocation.x()*stepLocation.x() + stepLocation.y()*stepLocation.y()));
+// 							hOPenter_z	->Fill(stepLocation.z());
+// 							G4ThreeVector vertexPos = track->GetVertexPosition();
+// 							hOPvtx_yx	->Fill(vertexPos.x(),vertexPos.y());
+// 							hOPvtx_rz	->Fill(vertexPos.z(),sqrt(vertexPos.x()*vertexPos.x() + vertexPos.y()*vertexPos.y()));
+// 							hOPvtx_z	->Fill(vertexPos.z());
+// 							//
+// //!!							track->SetTrackStatus(fStopAndKill);
+// //!!							return;
+// 							//
+// 						}
+// 					}
+// 				}
+// 			}
 			//
 			//
 		}	// end operator function
