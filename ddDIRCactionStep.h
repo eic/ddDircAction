@@ -420,25 +420,25 @@ namespace dd4hep {
 			}	// end check: primary entering bar?
 			//
 			//
-// 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
-// 				auto  thisPreStepPoint	=  step->GetPreStepPoint();
-// 				TString  PreVolName		=  thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
-// 				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
-// 				double OPcr_x	= OPpos.x();
-// 				double OPcr_y	= OPpos.y();
-// 				double OPcr_z	= OPpos.z();
-// 				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
-// 				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
-// 				hOPcr_z			->Fill(OPcr_z);
-// 				//
-// 				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
-// 				//
-// 				if (OPcr_z < Zbarsend){
-// 					track->SetTrackStatus(fStopAndKill);
-// 					return;
-// 				}
-// 				//
-// 			}
+ 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
+ 				auto  thisPreStepPoint	=  step->GetPreStepPoint();
+ 				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
+ 				double OPcr_x	= OPpos.x();
+ 				double OPcr_y	= OPpos.y();
+ 				double OPcr_z	= OPpos.z();
+ 				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
+ 				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
+ 				hOPcr_z			->Fill(OPcr_z);
+				//
+				//TString  PreVolName		= thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
+				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
+				//
+ 				if (OPcr_z < Zbarsend){		//!!!!!!!!!!! OPs CREATED IN PRISM !!!!!!!!!!!!!!!!
+ 					track->SetTrackStatus(fStopAndKill);
+ 					return;					//!!!!!!!!!!! KILL THESE! !!!!!!!!!!!!!!!!!!!!!!!!!
+ 				}
+ 				//
+ 			}
 			//
 			//---- let's see if OPs enter bars from outside...
 			//
