@@ -44,6 +44,7 @@ namespace dd4hep {
 		TH2D*	hOPcr_yx;
 		TH2D*	hOPcr_rz;
 		TH1D*	hOPcr_z;
+		TH2D*	hOPcr_costhetaz;
 		TH2D*	hOPvtx_yx;		// creation point of OPs that enter bars from the outside!
 		TH2D*	hOPvtx_rz;		// creation point of OPs that enter bars from the outside!
 		TH1D*	hOPvtx_z;		// creation point of OPs that enter bars from the outside!
@@ -74,7 +75,7 @@ namespace dd4hep {
 			//
 			std::cout<<"ddDIRCactionStep -- mDetailLevel = "<<mDetailLevel<<std::endl;
 			//
-			Zbarsend	= -2729.075*mm;		// mm	!!!!!!!!!TEMPORARY!!!!!!!!! 
+			Zbarsend	= -2729.075;		// mm	!!!!!!!!!TEMPORARY!!!!!!!!! 
 			std::cout<<"ddDIRCactionStep -- Killing OPs created with Z < "<<Zbarsend<<std::endl;
 			//
 		};	//---- end ctor
@@ -92,6 +93,7 @@ namespace dd4hep {
  					hOPcr_yx->Write();
  					hOPcr_rz->Write();
  					hOPcr_z->Write();
+ 					hOPcr_costhetaz->Write();
  					hOPvtx_yx->Write();
  					hOPvtx_rz->Write();
  					hOPvtx_z->Write();
@@ -171,12 +173,13 @@ namespace dd4hep {
 			//
 			if (DETAIL){
 				//
-				hOPcr_yx	= new TH2D("hOPcr_yx" ,"hOPcr_yx" ,500,-1000,1000,500,-1000,1000);
-				hOPcr_rz	= new TH2D("hOPcr_rz" ,"hOPcr_rz" ,660,-3300,3300,500,    0,1000);
-				hOPcr_z		= new TH1D("hOPcr_z"  ,"hOPcr_z"  ,660,-3300,3300);
-				hOPvtx_yx	= new TH2D("hOPvtx_yx","hOPvtx_yx",500,-1000,1000,500,-1000,1000);
-				hOPvtx_rz	= new TH2D("hOPvtx_rz","hOPvtx_rz",660,-3300,3300,500,    0,1000);
-				hOPvtx_z	= new TH1D("hOPvtx_z" ,"hOPvtx_z" ,660,-3300,3300);
+				hOPcr_yx		= new TH2D("hOPcr_yx" ,"hOPcr_yx" ,500,-1000,1000,500,-1000,1000);
+				hOPcr_rz		= new TH2D("hOPcr_rz" ,"hOPcr_rz" ,660,-3300,3300,500,    0,1000);
+				hOPcr_z			= new TH1D("hOPcr_z"  ,"hOPcr_z"  ,660,-3300,3300);
+				hOPcr_costhetaz	= new TH2D("hOPcr_costhetaz" ,"hOPcr cos(OPtheta) vs OPz" ,1060,-3300,2000,1005,-1.0,1.01);
+				hOPvtx_yx		= new TH2D("hOPvtx_yx","hOPvtx_yx",500,-1000,1000,500,-1000,1000);
+				hOPvtx_rz		= new TH2D("hOPvtx_rz","hOPvtx_rz",660,-3300,3300,500,    0,1000);
+				hOPvtx_z		= new TH1D("hOPvtx_z" ,"hOPvtx_z" ,660,-3300,3300);
 				hOPnotdirc_yx	= new TH2D("hOPnotdirc_yx","hOPnotdirc_yx",500,-1000,1000,500,-1000,1000);
 				hOPnotdirc_rz	= new TH2D("hOPnotdirc_rz","hOPnotdirc_rz",660,-3300,3300,500,    0,1000);
 				hOPnotdirc_z	= new TH1D("hOPnotdirc_z" ,"hOPnotdirc_z" ,660,-3300,3300);
@@ -245,6 +248,9 @@ namespace dd4hep {
 				DircIncidenceTree->Fill();
 				++nFill;
 				iEntryIncCurrent	=  0;
+				//
+				if (nFill%1000==0){ std::cout<<"ddDircAction -- fill "<<nFill<<"\t ...eventID "<<currentEventID<<std::endl; }
+				//
 			}
 			//
 			G4Track* track	= step->GetTrack();
@@ -420,23 +426,31 @@ namespace dd4hep {
 			}	// end check: primary entering bar?
 			//
 			//
- 			if (pdgCode==-22 && stepNumber==1 ){	// OP at creation
- 				auto  thisPreStepPoint	=  step->GetPreStepPoint();
+			//---- OP at creation: stepNumber==1 && use info from preStep point
+ 			if (pdgCode==-22 && stepNumber==1 ){	
+ 				auto  thisPreStepPoint	= step->GetPreStepPoint();
  				G4ThreeVector OPpos		= thisPreStepPoint->GetPosition();
+ 				G4ThreeVector OPdir		= thisPreStepPoint->GetMomentumDirection();
+				double OPdirz	= OPdir.z()/OPdir.mag();
  				double OPcr_x	= OPpos.x();
  				double OPcr_y	= OPpos.y();
  				double OPcr_z	= OPpos.z();
  				hOPcr_yx		->Fill(OPcr_x,OPcr_y);
  				hOPcr_rz		->Fill(OPcr_z,sqrt(OPcr_x*OPcr_x + OPcr_y*OPcr_y));
  				hOPcr_z			->Fill(OPcr_z);
+ 				if (OPcr_z < Zbarsend){		//!!!!!!!!!!! OPs CREATED IN PRISM !!!!!!!!!!!!!!!!
+ 					track->SetTrackStatus(fStopAndKill);
+//std::cout<<OPcr_z<<" "<<Zbarsend;
+//std::cout<<"\t REJECT"<<std::endl;
+ 					return;					//!!!!!!!!!!! KILL THESE! !!!!!!!!!!!!!!!!!!!!!!!!!
+ 				} else {
+//std::cout<<"\t KEEP"<<std::endl;
+				}
+ 				hOPcr_costhetaz	->Fill(OPcr_z,OPdirz);	// fill w.out prism hits for clarity...
 				//
 				//TString  PreVolName		= thisPreStepPoint->GetTouchableHandle()->GetVolume()->GetName();
 				//std::cout<<"OP create "<<trackID<<" "<<PreVolName<<" "<<PostVolName<<std::endl;
 				//
- 				if (OPcr_z < Zbarsend){		//!!!!!!!!!!! OPs CREATED IN PRISM !!!!!!!!!!!!!!!!
- 					track->SetTrackStatus(fStopAndKill);
- 					return;					//!!!!!!!!!!! KILL THESE! !!!!!!!!!!!!!!!!!!!!!!!!!
- 				}
  				//
  			}
 			//
